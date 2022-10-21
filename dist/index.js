@@ -11,6 +11,8 @@ import express from 'express';
 const app = express();
 const PORT = 3003;
 import fetch from 'node-fetch';
+import cors from 'cors';
+app.use(cors());
 import { GraphQLClient, gql } from 'graphql-request';
 const endpoint = 'http://localhost:3001/graphql';
 const graphQLClient = new GraphQLClient(endpoint);
