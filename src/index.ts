@@ -1,6 +1,7 @@
 import express from 'express'
 const app = express()
 const PORT = 3003
+import fetch from 'node-fetch';
 
 import { GraphQLClient, gql } from 'graphql-request'
 const endpoint = 'http://localhost:3001/graphql'
@@ -59,7 +60,7 @@ async function runCollection(collection) {
     const timestampStart = Date.now()
     const { url, method, headers, body, assertions } = request
 
-    let config: RequestInit = { method, headers }
+    let config = { method, headers, body: null }
     if (method !== 'GET') {
       config.body = body
     }

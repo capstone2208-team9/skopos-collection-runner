@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,16 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const app = (0, express_1.default)();
+import express from 'express';
+const app = express();
 const PORT = 3003;
-const graphql_request_1 = require("graphql-request");
+import fetch from 'node-fetch';
+import { GraphQLClient, gql } from 'graphql-request';
 const endpoint = 'http://localhost:3001/graphql';
-const graphQLClient = new graphql_request_1.GraphQLClient(endpoint);
+const graphQLClient = new GraphQLClient(endpoint);
 app.get('/:id', (req, res) => {
     const collectionId = req.params.id;
     main(collectionId).catch((error) => console.error(error));
@@ -34,7 +30,7 @@ function main(collectionId) {
 }
 function queryCollection(collectionId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const query = (0, graphql_request_1.gql) `
+        const query = gql `
   query Collection($where: CollectionWhereUniqueInput!) {
     collection(where: $where) {
       requests {
@@ -67,8 +63,7 @@ function runCollection(collection) {
             const requestId = request.id;
             const timestampStart = Date.now();
             const { url, method, headers, body, assertions } = request;
-            console.log(assertions);
-            let config = { method, headers };
+            let config = { method, headers, body: null };
             if (method !== 'GET') {
                 config.body = body;
             }
@@ -88,7 +83,7 @@ function runCollection(collection) {
                     }
                 }
             };
-            const responseMutation = (0, graphql_request_1.gql) `
+            const responseMutation = gql `
     mutation CreateOneResponse($data: ResponseCreateInput!) {
       createOneResponse(data: $data) {
         id
@@ -98,7 +93,7 @@ function runCollection(collection) {
             const responseData = yield graphQLClient.request(responseMutation, responseVariables);
             const responseId = responseData.createOneResponse.id;
             const responseTimestamp = responseData.createOneResponse.createdAt;
-            const assertionResultsMutation = (0, graphql_request_1.gql) `
+            const assertionResultsMutation = gql `
     mutation CreateManyAssertionResults($data: [AssertionResultsCreateManyInput!]!) {
       createManyAssertionResults(data: $data) {
         count
