@@ -3,6 +3,7 @@ const app = express()
 const PORT = 3003
 import fetch from 'node-fetch';
 import cors from 'cors'
+import replaceVariableReferences from './utils/replaceVariableReferences.js'
 
 app.use(cors())
 
@@ -29,49 +30,73 @@ async function main(collectionId) {
 
 async function queryCollection(collectionId) {
   const query = gql`
-  query Collection($where: CollectionWhereUniqueInput!) {
-    collection(where: $where) {
-      requests {
-        id
-        title
-        body
-        url
-        method
-        headers
-        assertions {
-          id
-          property
-          expected
-        }
-      }
+  query Requests($where: RequestWhereInput, $orderBy: [RequestOrderByWithRelationInput!]) {
+  requests(where: $where, orderBy: $orderBy) {
+    id
+    title
+    body
+    method
+    headers
+    url
+    assertions {
+      id
+      property
+      expected
     }
-  }`
+    collectionId
+  }
+}`
 
   const queryVariables = {
-    where: {
-      id: Number(collectionId),
+    "where": {
+      "collectionId": {
+        "equals": 2
+      }
+    },
+    "orderBy": {
+      "stepNumber": "asc"
     }
   }
 
   const data = await graphQLClient.request(query, queryVariables)
-  return data.collection
+  return data
+}
+
+interface Responses {
+  [key: string]: any;
+}
+
+interface Configuration {
+  method: string;
+  headers: any;
+  body?: string;
 }
 
 async function runCollection(collection) {
+  const responses: Responses = {};
+
   for (let request of collection.requests) {
     const requestId = request.id
     const timestampStart = Date.now()
-    const { url, method, headers, body, assertions } = request
+    let { url, method, headers, body, assertions } = request
 
-    let config = { method, headers, body: null }
-    if (method !== 'GET') {
-      config.body = body
+    console.log(url, responses)
+    url = replaceVariableReferences(url, responses)
+    console.log(url, responses)
+
+    let config: Configuration = { method, headers };
+
+    if (method.toUpperCase() !== "GET") {
+      body = replaceVariableReferences(body, responses);
+      config = { ...config, body };
     }
 
     let fetchResponse = await fetch(url, config)
 
     const timeForRequest = Date.now() - timestampStart
     let json = await fetchResponse.json()
+    responses[request.title] = json;
+    console.log(responses)
 
     const responseVariables = {
       data: {
@@ -91,11 +116,12 @@ async function runCollection(collection) {
     mutation CreateOneResponse($data: ResponseCreateInput!) {
       createOneResponse(data: $data) {
         id
-        createdAt
+        body
       }
     }`
 
     const responseData = await graphQLClient.request(responseMutation, responseVariables)
+    console.log(responseData)
     const responseId = responseData.createOneResponse.id
     const responseTimestamp = responseData.createOneResponse.createdAt
 
