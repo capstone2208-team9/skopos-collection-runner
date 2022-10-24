@@ -15,7 +15,8 @@ const app = express();
 const PORT = 3003;
 app.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const collectionId = Number(req.params.id);
-    const collectionRunnerService = interpret(collectionRunnerMachine).onTransition(state => console.log(state.value, state.context));
+    const collectionRunnerService = interpret(collectionRunnerMachine);
+    // .onTransition(state => console.log(state.value, state.context)) // Logging
     collectionRunnerService.start();
     collectionRunnerService.send({ type: 'QUERY', collectionId });
     yield waitFor(collectionRunnerService, (state) => state.matches('complete'));

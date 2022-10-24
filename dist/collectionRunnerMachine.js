@@ -7,11 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { createMachine, assign } from 'xstate';
-import { requestRunnerMachine } from './requestRunnerMachine.js';
-import { requestProcessorMachine } from './requestProcessorMachine.js';
-import { GraphQLClient, gql } from 'graphql-request';
-const endpoint = 'http://localhost:3001/graphql';
+import { createMachine, assign } from "xstate";
+import { requestRunnerMachine } from "./requestRunnerMachine.js";
+import { requestProcessorMachine } from "./requestProcessorMachine.js";
+import { GraphQLClient, gql } from "graphql-request";
+const endpoint = "http://localhost:3001/graphql";
 const graphQLClient = new GraphQLClient(endpoint);
 const requestListCompleted = (context, event) => {
     console.log("in the always");
@@ -20,32 +20,36 @@ const requestListCompleted = (context, event) => {
 function invokeQueryRequests(collectionId) {
     return __awaiter(this, void 0, void 0, function* () {
         const query = gql `
-  query Requests($where: RequestWhereInput, $orderBy: [RequestOrderByWithRelationInput!]) {
-  requests(where: $where, orderBy: $orderBy) {
-    id
-    stepNumber
-    title
-    body
-    method
-    headers
-    url
-    assertions {
-      id
-      property
-      expected
+    query Requests(
+      $where: RequestWhereInput
+      $orderBy: [RequestOrderByWithRelationInput!]
+    ) {
+      requests(where: $where, orderBy: $orderBy) {
+        id
+        stepNumber
+        title
+        body
+        method
+        headers
+        url
+        assertions {
+          id
+          property
+          expected
+        }
+        collectionId
+      }
     }
-    collectionId
-  }
-}`;
+  `;
         const queryVariables = {
-            "where": {
-                "collectionId": {
-                    "equals": Number(collectionId)
-                }
+            where: {
+                collectionId: {
+                    equals: Number(collectionId),
+                },
             },
-            "orderBy": {
-                "stepNumber": "asc"
-            }
+            orderBy: {
+                stepNumber: "asc",
+            },
         };
         const data = yield graphQLClient.request(query, queryVariables);
         return data;
@@ -73,10 +77,10 @@ export const collectionRunnerMachine = createMachine({
                 onDone: {
                     target: "running",
                     actions: assign({
-                        requestList: (context, event) => event.data.requests
-                    })
+                        requestList: (context, event) => event.data.requests,
+                    }),
                 },
-                onError: {}
+                onError: {},
             },
         },
         running: {
@@ -84,11 +88,11 @@ export const collectionRunnerMachine = createMachine({
             states: {
                 processing: {
                     invoke: {
-                        id: 'process-request',
+                        id: "process-request",
                         src: requestProcessorMachine,
                         data: {
                             request: (context, event) => context.requestList[0],
-                            responses: (context, event) => context.responses
+                            responses: (context, event) => context.responses,
                         },
                         onDone: {
                             target: "requesting",
@@ -100,39 +104,41 @@ export const collectionRunnerMachine = createMachine({
                                     else {
                                         return item;
                                     }
-                                })
-                            })
-                        }
+                                }),
+                            }),
+                        },
                     },
                 },
                 requesting: {
                     invoke: {
-                        id: 'run-request',
+                        id: "run-request",
                         src: requestRunnerMachine,
                         data: {
-                            request: (context, event) => context.requestList[0]
+                            request: (context, event) => context.requestList[0],
                         },
-                        onDone: [{
+                        onDone: [
+                            {
                                 target: "#collectionRunner.running.processing",
                                 cond: (context, event) => {
                                     return context.requestList.length > 1;
                                 },
                                 actions: [
                                     assign({
-                                        responses: (context, event) => context.responses.concat(event.data.data)
+                                        responses: (context, event) => context.responses.concat(event.data.data),
                                     }),
                                     assign({
-                                        requestList: (context, event) => context.requestList.slice(1)
-                                    })
-                                ]
+                                        requestList: (context, event) => context.requestList.slice(1),
+                                    }),
+                                ],
                             },
                             {
                                 target: "#collectionRunner.complete",
                                 actions: assign({
-                                    responses: (context, event) => context.responses.concat(event.data.data)
+                                    responses: (context, event) => context.responses.concat(event.data.data),
                                 }),
-                            }]
-                    }
+                            },
+                        ],
+                    },
                 },
             },
         },
