@@ -12,8 +12,8 @@ export type RequestRunnerEvent =
 
 export interface RequestRunnerContext {
   request?: object
+  collectionRunId?: number
   responseData?: object
-  responseId?: number
 }
 
 export type RequestRunnerTypestate =
@@ -83,8 +83,8 @@ export type CollectionRunnerEvent =
 
 export interface CollectionRunnerContext {
   collectionId?: number
+  collectionRunId?: number
   requestList?: object[]
-  request?: object
   responses?: object[]
 }
 
@@ -92,15 +92,21 @@ export type CollectionRunnerTypestate =
   | {
     value: "idle"
     context: CollectionRunnerContext & {
+      collectionRunId: undefined
       requestList: undefined
-      request: undefined
     }
   }
   | {
     value: "querying"
     context: CollectionRunnerContext & {
+      collectionRunId: undefined
       requestList: undefined
-      request: undefined
+    }
+  }
+  | {
+    value: "initializing"
+    context: CollectionRunnerContext & {
+      requestList: undefined
     }
   }
   | {

@@ -56,7 +56,6 @@ async function invokeInterpolateVariables(request, variablesPathsArray) {
 }
 
 export const requestProcessorMachine = createMachine<RequestProcessorContext, RequestProcessorEvent, RequestProcessorTypestate>({
-  // id: request.id,
   initial: "parsing",
   context: {
     request: undefined,
@@ -77,8 +76,7 @@ export const requestProcessorMachine = createMachine<RequestProcessorContext, Re
       }
     },
     searching: {
-      invoke: { // Once responses saved, need to send assertion data to db
-        // should this be done with a new assertionCheck machine or something?
+      invoke: {
         id: "search-references",
         src: (context, event) => invokeSearchReferencedValues(context.responses, context.variablesAndPaths),
         onDone: {
@@ -90,8 +88,7 @@ export const requestProcessorMachine = createMachine<RequestProcessorContext, Re
       }
     },
     interpolating: {
-      invoke: { // Once responses saved, need to send assertion data to db
-        // should this be done with a new assertionCheck machine or something?
+      invoke: {
         id: "interpolate-variables",
         src: (context, event) => invokeInterpolateVariables(context.request, context.variablesAndPaths),
         onDone: {

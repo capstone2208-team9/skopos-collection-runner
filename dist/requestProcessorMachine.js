@@ -57,7 +57,6 @@ function invokeInterpolateVariables(request, variablesPathsArray) {
     });
 }
 export const requestProcessorMachine = createMachine({
-    // id: request.id,
     initial: "parsing",
     context: {
         request: undefined,
@@ -79,7 +78,6 @@ export const requestProcessorMachine = createMachine({
         },
         searching: {
             invoke: {
-                // should this be done with a new assertionCheck machine or something?
                 id: "search-references",
                 src: (context, event) => invokeSearchReferencedValues(context.responses, context.variablesAndPaths),
                 onDone: {
@@ -92,7 +90,6 @@ export const requestProcessorMachine = createMachine({
         },
         interpolating: {
             invoke: {
-                // should this be done with a new assertionCheck machine or something?
                 id: "interpolate-variables",
                 src: (context, event) => invokeInterpolateVariables(context.request, context.variablesAndPaths),
                 onDone: {

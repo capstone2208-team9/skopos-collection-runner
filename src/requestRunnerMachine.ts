@@ -1,4 +1,4 @@
-import { createMachine, assign, actions } from 'xstate';
+import { createMachine, assign } from 'xstate';
 import fetch from 'node-fetch';
 import { Configuration, RequestRunnerContext, RequestRunnerEvent, RequestRunnerTypestate } from './types'
 
@@ -7,8 +7,7 @@ import { GraphQLClient, gql } from 'graphql-request'
 const endpoint = 'http://localhost:3001/graphql'
 const graphQLClient = new GraphQLClient(endpoint)
 
-async function invokeFetchAPICall(request) {
-  console.log("THE REQUEST", request)
+async function invokeFetchAPICall(request, collectionRunId) {
   let { id: requestId, url, method, headers, body, assertions } = request
   let config: Configuration = { method, headers };
   if (method.toUpperCase() !== "GET") {
@@ -26,6 +25,11 @@ async function invokeFetchAPICall(request) {
       headers: fetchResponse.headers,
       latency: timeForRequest,
       body: json,
+      CollectionRun: {
+        connect: {
+          id: collectionRunId
+        }
+      },
       request: {
         connect: {
           id: Number(requestId)
@@ -34,7 +38,6 @@ async function invokeFetchAPICall(request) {
     }
   }
 
-  console.log(responseVariables)
   return responseVariables
 }
 
@@ -50,41 +53,18 @@ async function invokeSaveResponse(responseData) {
   return databaseResponse.createOneResponse.id
 }
 
-async function invokeCheckAssertions(request, responseData, responseId) {
-  const assertionResultsMutation = gql`
-    mutation CreateManyAssertionResults($data: [AssertionResultsCreateManyInput!]!) {
-      createManyAssertionResults(data: $data) {
-        count
-      }
-    }`
-
-  const assertionResultsVariables = {
-    data: request.assertions.map(assertion => {
-      return {
-        actual: String(responseData.data.status),
-        assertionId: Number(assertion.id),
-        responseId: Number(responseId),
-        pass: (String(assertion.expected) === String(responseData.data.status))
-      }
-    })
-  }
-
-  await graphQLClient.request(assertionResultsMutation, assertionResultsVariables)
-  return
-}
-
 export const requestRunnerMachine = createMachine<RequestRunnerContext, RequestRunnerEvent, RequestRunnerTypestate>({
   initial: "fetching",
   context: {
     request: undefined,
     responseData: undefined,
-    responseId: undefined,
+    collectionRunId: undefined
   },
   states: {
     fetching: {
       invoke: {
         id: "fetch-api-call",
-        src: (context, event) => invokeFetchAPICall(context.request),
+        src: (context, event) => invokeFetchAPICall(context.request, context.collectionRunId),
         onDone: {
           target: "loaded",
           actions: assign({
@@ -98,19 +78,7 @@ export const requestRunnerMachine = createMachine<RequestRunnerContext, RequestR
         id: "save-response",
         src: (context, event) => invokeSaveResponse(context.responseData),
         onDone: {
-          target: "responseSaved",
-          actions: assign({
-            responseId: (_, event) => event.data
-          })
-        }
-      }
-    },
-    responseSaved: {
-      invoke: {
-        id: "check-assertions",
-        src: (context, event) => invokeCheckAssertions(context.request, context.responseData, context.responseId),
-        onDone: {
-          target: "done"
+          target: "done",
         }
       }
     },

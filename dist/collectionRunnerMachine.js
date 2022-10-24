@@ -13,10 +13,6 @@ import { requestProcessorMachine } from './requestProcessorMachine.js';
 import { GraphQLClient, gql } from 'graphql-request';
 const endpoint = 'http://localhost:3001/graphql';
 const graphQLClient = new GraphQLClient(endpoint);
-const requestListCompleted = (context, event) => {
-    console.log("in the always");
-    return context.requestList.length <= 0;
-};
 function invokeQueryRequests(collectionId) {
     return __awaiter(this, void 0, void 0, function* () {
         const query = gql `
@@ -51,6 +47,28 @@ function invokeQueryRequests(collectionId) {
         return data;
     });
 }
+function invokeCreateCollectionRun(collectionId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const mutation = gql `
+    mutation CreateOneCollectionRun($data: CollectionRunCreateInput!) {
+      createOneCollectionRun(data: $data) {
+        id
+      }
+    }`;
+        const mutationVariables = {
+            "data": {
+                "success": true,
+                "Collection": {
+                    "connect": {
+                        "id": collectionId
+                    }
+                }
+            }
+        };
+        const databaseResponse = yield graphQLClient.request(mutation, mutationVariables);
+        return databaseResponse.createOneCollectionRun.id;
+    });
+}
 export const collectionRunnerMachine = createMachine({
     context: { collectionId: undefined, requestList: undefined, responses: [] },
     id: "collectionRunner",
@@ -71,13 +89,25 @@ export const collectionRunnerMachine = createMachine({
                 src: (context, event) => invokeQueryRequests(context.collectionId),
                 id: "query-requests",
                 onDone: {
-                    target: "running",
+                    target: "initializing",
                     actions: assign({
                         requestList: (context, event) => event.data.requests
                     })
                 },
                 onError: {}
             },
+        },
+        initializing: {
+            invoke: {
+                src: (context, event) => invokeCreateCollectionRun(context.collectionId),
+                id: "initialize-collection-run",
+                onDone: {
+                    target: "running",
+                    actions: assign({
+                        collectionRunId: (context, event) => event.data
+                    })
+                }
+            }
         },
         running: {
             initial: "processing",
@@ -110,7 +140,8 @@ export const collectionRunnerMachine = createMachine({
                         id: 'run-request',
                         src: requestRunnerMachine,
                         data: {
-                            request: (context, event) => context.requestList[0]
+                            request: (context, event) => context.requestList[0],
+                            collectionRunId: (context, event) => context.collectionRunId
                         },
                         onDone: [{
                                 target: "#collectionRunner.running.processing",
