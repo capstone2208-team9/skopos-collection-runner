@@ -116,6 +116,9 @@ export const collectionRunnerMachine =
           },
           onDone: {
             target: 'complete',
+          },
+          onError: {
+            target: 'complete'
           }
         }
       },
