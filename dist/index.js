@@ -9,18 +9,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { interpret } from 'xstate';
 import { waitFor } from 'xstate/lib/waitFor.js';
+import cors from 'cors';
 import { collectionRunnerMachine } from './collectionRunnerMachine.js';
 import express from 'express';
 const app = express();
+app.use(cors());
 const PORT = 3003;
 app.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const collectionId = Number(req.params.id);
-    const collectionRunnerService = interpret(collectionRunnerMachine);
-    // .onTransition(state => console.log(state.value, state.context)) // FOR LOGGING
+    const collectionRunnerService = interpret(collectionRunnerMachine)
+        .onTransition(state => console.log(state.value, state.context)); // FOR LOGGING
     collectionRunnerService.start();
     collectionRunnerService.send({ type: 'QUERY', collectionId });
     yield waitFor(collectionRunnerService, (state) => state.matches('complete'));
     collectionRunnerService.stop();
+    res.header("Access-Control-Allow-Origin", "*");
     res.sendStatus(200);
 }));
 app.listen(PORT, () => {
