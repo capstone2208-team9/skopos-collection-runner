@@ -1,13 +1,15 @@
-import { createMachine, assign } from 'xstate';
-import fetch from 'node-fetch';
-import { Configuration, RequestRunnerContext, RequestRunnerEvent, RequestRunnerTypestate } from './types'
-
 import { GraphQLClient, gql } from 'graphql-request'
-
+import fetch from 'node-fetch';
 const endpoint = 'http://localhost:3001/graphql'
 const graphQLClient = new GraphQLClient(endpoint)
 
-async function invokeFetchAPICall(request, collectionRunId) {
+interface Configuration {
+  method: string;
+  headers: any;
+  body?: string;
+}
+
+export async function invokeFetchAPICall(request, collectionRunId) {
   let { id: requestId, url, method, headers, body, assertions } = request
   let config: Configuration = { method, headers };
   if (method.toUpperCase() !== "GET") {
@@ -41,7 +43,7 @@ async function invokeFetchAPICall(request, collectionRunId) {
   return responseVariables
 }
 
-async function invokeSaveResponse(responseData) {
+export async function invokeSaveResponse(responseData) {
   const responseMutation = gql`
     mutation CreateOneResponse($data: ResponseCreateInput!) {
       createOneResponse(data: $data) {
@@ -52,40 +54,3 @@ async function invokeSaveResponse(responseData) {
   const databaseResponse = await graphQLClient.request(responseMutation, responseData)
   return databaseResponse.createOneResponse.id
 }
-
-export const requestRunnerMachine = createMachine<RequestRunnerContext, RequestRunnerEvent, RequestRunnerTypestate>({
-  initial: "fetching",
-  context: {
-    request: undefined,
-    responseData: undefined,
-    collectionRunId: undefined
-  },
-  states: {
-    fetching: {
-      invoke: {
-        id: "fetch-api-call",
-        src: (context, event) => invokeFetchAPICall(context.request, context.collectionRunId),
-        onDone: {
-          target: "loaded",
-          actions: assign({
-            responseData: (_, event) => event.data
-          })
-        }
-      }
-    },
-    loaded: {
-      invoke: {
-        id: "save-response",
-        src: (context, event) => invokeSaveResponse(context.responseData),
-        onDone: {
-          target: "done",
-        }
-      }
-    },
-    done: {
-      type: "final",
-      data: (context, event) => context.responseData
-    },
-    failed: {}
-  }
-})

@@ -3,11 +3,17 @@
     "module": "ES2020",
     "esModuleInterop": true,
     "target": "ES6",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "sourceMap": true,
     "outDir": "dist"
   },
   "lib": [
     "es2015"
+  ],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
   ]
 }

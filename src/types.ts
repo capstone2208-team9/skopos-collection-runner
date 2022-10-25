@@ -1,9 +1,3 @@
-export interface Configuration {
-  method: string;
-  headers: any;
-  body?: string;
-}
-
 // REQUEST RUNNER MACHINE TYPES
 export type RequestRunnerEvent =
   | { type: 'done.invoke.fetch-api-call'; data: object[] }
