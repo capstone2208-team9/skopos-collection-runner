@@ -1,9 +1,32 @@
 import { createMachine, assign } from 'xstate';
 import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from './utils/requestProcessorHelpers.js';
-import { RequestProcessorContext, RequestProcessorEvent, RequestProcessorTypestate } from '../types.js'
 
-export const requestProcessorMachine = createMachine<RequestProcessorContext, RequestProcessorEvent, RequestProcessorTypestate>({
-  initial: "parsing",
+export const requestProcessorMachine = createMachine({
+  predictableActionArguments: true,
+  tsTypes: {} as import("./requestProcessorMachine.typegen.js").Typegen0,
+  schema: {
+    context: {} as {
+      request?: object
+      responses?: object[]
+      variablesAndPaths?: any[]
+    },
+    events: {} as { type: 'done.invoke.parse-request'; data: any[] }
+      | { type: 'done.invoke.search-references'; data: any[] }
+      | { type: 'done.invoke.interpolate-variables'; data: object }
+      | { type: 'QUERY'; collectionId: number },
+    services: {} as {
+      parseRequest: {
+        data: any[]
+      },
+      searchForReferencedValues: {
+        data: any[]
+      },
+      interpolateVariables: {
+        data: object
+      }
+    }
+  },
+  initial: 'parsing',
   context: {
     request: undefined,
     responses: undefined,
@@ -12,37 +35,31 @@ export const requestProcessorMachine = createMachine<RequestProcessorContext, Re
   states: {
     parsing: {
       invoke: {
-        id: "parse-request",
-        src: (context, event) => invokeParseRequest(context.request),
+        id: 'parse-request',
+        src: 'parseRequest',
         onDone: {
           target: "searching",
-          actions: assign({
-            variablesAndPaths: (_, event) => event.data
-          })
+          actions: 'assignVariablesAndPaths'
         }
       }
     },
     searching: {
       invoke: {
-        id: "search-references",
-        src: (context, event) => invokeSearchReferencedValues(context.responses, context.variablesAndPaths),
+        id: 'search-references',
+        src: 'searchForReferencedValues',
         onDone: {
-          target: "interpolating",
-          actions: assign({
-            variablesAndPaths: (_, event) => event.data
-          })
+          target: 'interpolating',
+          actions: 'assignVariablesAndPaths'
         }
       }
     },
     interpolating: {
       invoke: {
-        id: "interpolate-variables",
-        src: (context, event) => invokeInterpolateVariables(context.request, context.variablesAndPaths),
+        id: 'interpolate-variables',
+        src: 'interpolateVariables',
         onDone: {
-          target: "complete",
-          actions: assign({
-            request: (_, event) => event.data
-          })
+          target: 'complete',
+          actions: 'assignRequest'
         }
       }
     },
@@ -52,4 +69,26 @@ export const requestProcessorMachine = createMachine<RequestProcessorContext, Re
     },
     failed: {}
   }
-})
+},
+  {
+    actions: {
+      // action implementation
+      'assignVariablesAndPaths': assign({
+        variablesAndPaths: (_, event) => event.data
+      }),
+      'assignRequest': assign({
+        request: (_, event) => event.data
+      })
+    },
+    delays: {
+      // no delays here
+    },
+    guards: {
+      // no guards here
+    },
+    services: {
+      parseRequest: (context, event) => invokeParseRequest(context.request),
+      searchForReferencedValues: (context, event) => invokeSearchReferencedValues(context.responses, context.variablesAndPaths),
+      interpolateVariables: (context, event) => invokeInterpolateVariables(context.request, context.variablesAndPaths)
+    }
+  })

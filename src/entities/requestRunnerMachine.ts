@@ -1,16 +1,28 @@
 import { createMachine, assign } from 'xstate';
 import { invokeFetchAPICall, invokeSaveResponse } from './utils/requestRunnerHelpers.js'
-import { RequestRunnerContext, RequestRunnerEvent, RequestRunnerTypestate } from '../types.js'
 
-import { GraphQLClient, gql } from 'graphql-request'
-
-const endpoint = 'http://localhost:3001/graphql'
-const graphQLClient = new GraphQLClient(endpoint)
-
-
-
-export const requestRunnerMachine = createMachine<RequestRunnerContext, RequestRunnerEvent, RequestRunnerTypestate>({
-  initial: "fetching",
+export const requestRunnerMachine = createMachine({
+  predictableActionArguments: true,
+  tsTypes: {} as import('./requestRunnerMachine.typegen.js').Typegen0,
+  schema: {
+    context: {} as {
+      request?: object
+      collectionRunId?: number
+      responseData?: object
+    },
+    events: {} as
+      | { type: 'done.invoke.fetch-api-call'; data: object }
+      | { type: 'done.invoke.save-response'; data: number },
+    services: {} as {
+      fetchAPICall: {
+        data: object
+      },
+      saveResponse: {
+        data: number
+      }
+    }
+  },
+  initial: 'fetching',
   context: {
     request: undefined,
     responseData: undefined,
@@ -19,29 +31,45 @@ export const requestRunnerMachine = createMachine<RequestRunnerContext, RequestR
   states: {
     fetching: {
       invoke: {
-        id: "fetch-api-call",
-        src: (context, event) => invokeFetchAPICall(context.request, context.collectionRunId),
+        id: 'fetch-api-call',
+        src: 'fetchAPICall',
         onDone: {
-          target: "loaded",
-          actions: assign({
-            responseData: (_, event) => event.data
-          })
+          target: 'loaded',
+          actions: 'assignResponseData'
         }
       }
     },
     loaded: {
       invoke: {
-        id: "save-response",
-        src: (context, event) => invokeSaveResponse(context.responseData),
+        id: 'save-response',
+        src: 'saveResponse',
         onDone: {
-          target: "done",
+          target: 'done',
         }
       }
     },
     done: {
-      type: "final",
+      type: 'final',
       data: (context, event) => context.responseData
     },
     failed: {}
   }
-})
+},
+  {
+    actions: {
+      // action implementation
+      'assignResponseData': assign({
+        responseData: (_, event) => event.data
+      }),
+    },
+    delays: {
+      // no delays here
+    },
+    guards: {
+      // no guards here
+    },
+    services: {
+      fetchAPICall: (context, event) => invokeFetchAPICall(context.request, context.collectionRunId),
+      saveResponse: (context, event) => invokeSaveResponse(context.responseData)
+    }
+  })

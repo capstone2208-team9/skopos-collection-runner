@@ -5,7 +5,8 @@ import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty } from './
 
 export const collectionRunnerMachine =
   createMachine({
-    tsTypes: {} as import("./collectionRunnerMachine.typegen.js").Typegen0,
+    predictableActionArguments: true,
+    tsTypes: {} as import('./collectionRunnerMachine.typegen.js').Typegen0,
     schema: {
       context: {} as {
         collectionId?: number
@@ -20,23 +21,23 @@ export const collectionRunnerMachine =
         | { type: 'done.invoke.run-request'; data: { data: object[] } }
     },
     context: { collectionId: undefined, requestList: undefined, responses: [] },
-    id: "collectionRunner",
-    initial: "idle",
+    id: 'collectionRunner',
+    initial: 'idle',
     states: {
       idle: {
         on: {
           QUERY: {
-            target: "querying",
+            target: 'querying',
             actions: 'assignCollectionId'
           },
         },
       },
       querying: {
         invoke: {
+          id: 'query-requests',
           src: 'queryRequests',
-          id: "query-requests",
           onDone: {
-            target: "initializing",
+            target: 'initializing',
             actions: 'assignRequestList'
           },
           onError: {}
@@ -44,16 +45,16 @@ export const collectionRunnerMachine =
       },
       initializing: {
         invoke: {
+          id: 'initialize-collection-run',
           src: 'createCollectionRun',
-          id: "initialize-collection-run",
           onDone: {
-            target: "running",
+            target: 'running',
             actions: 'assignCollectionRunId'
           }
         }
       },
       running: {
-        initial: "processing",
+        initial: 'processing',
         states: {
           processing: {
             invoke: {
@@ -64,7 +65,7 @@ export const collectionRunnerMachine =
                 responses: (context, event) => context.responses
               },
               onDone: {
-                target: "requesting",
+                target: 'requesting',
                 actions: 'assignProcessedRequestToList'
               }
             },
@@ -78,7 +79,7 @@ export const collectionRunnerMachine =
                 collectionRunId: (context, event) => context.collectionRunId
               },
               onDone: [{
-                target: "#collectionRunner.running.processing",
+                target: '#collectionRunner.running.processing',
                 cond: { type: 'listNotEmpty' },
                 actions: [
                   'assignResponses',
@@ -86,7 +87,7 @@ export const collectionRunnerMachine =
                 ]
               },
               {
-                target: "#collectionRunner.complete",
+                target: '#collectionRunner.complete',
                 actions: 'assignResponses',
               }]
             }
@@ -94,7 +95,7 @@ export const collectionRunnerMachine =
         },
       },
       complete: {
-        type: "final",
+        type: 'final',
       },
     },
   },
