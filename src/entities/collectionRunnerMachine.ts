@@ -109,7 +109,7 @@ export const collectionRunnerMachine =
       messaging: {
         invoke: {
           id: 'message-run-id',
-          src: (context, event) => invokeMessageRunId(context.collectionRunId, context.responses),
+          src: 'messageRunId',
           data: {
             collectionRunId: (context, event) => context.collectionRunId,
             responses: (context, event) => context.responses
@@ -158,5 +158,6 @@ export const collectionRunnerMachine =
       services: {
         queryRequests: (context, event) => invokeQueryRequests(context.collectionId),
         createCollectionRun: (context, event) => invokeCreateCollectionRun(context.collectionId),
+        messageRunId: (context, event) => invokeMessageRunId(context.collectionRunId, context.responses)
       }
     })
