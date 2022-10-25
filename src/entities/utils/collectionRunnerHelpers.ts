@@ -1,3 +1,4 @@
+import fetch from 'node-fetch';
 import { GraphQLClient, gql } from 'graphql-request'
 const endpoint = 'http://localhost:3001/graphql'
 const graphQLClient = new GraphQLClient(endpoint)
@@ -58,6 +59,15 @@ export async function invokeCreateCollectionRun(collectionId) {
 
   const databaseResponse = await graphQLClient.request(mutation, mutationVariables)
   return databaseResponse.createOneCollectionRun
+}
+
+export async function invokeMessageRunId(collectionRunId, responses) {
+  const fetchResponse = await fetch(`http://localhost:3005/${collectionRunId}`, {
+    method: 'POST',
+    body: JSON.stringify(responses),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return fetchResponse.status
 }
 
 export const listNotEmpty = (context, event) => context.requestList.length > 1

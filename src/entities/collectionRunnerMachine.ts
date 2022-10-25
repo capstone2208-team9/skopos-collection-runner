@@ -1,7 +1,7 @@
 import { createMachine, assign } from 'xstate';
 import { requestRunnerMachine } from './requestRunnerMachine.js'
 import { requestProcessorMachine } from './requestProcessorMachine.js'
-import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty } from './utils/collectionRunnerHelpers.js';
+import { invokeQueryRequests, invokeCreateCollectionRun, invokeMessageRunId, listNotEmpty } from './utils/collectionRunnerHelpers.js';
 
 export const collectionRunnerMachine =
   createMachine({
@@ -19,6 +19,18 @@ export const collectionRunnerMachine =
         | { type: 'done.invoke.initialize-collection-run'; data: { id: number } }
         | { type: 'done.invoke.process-request'; data: { requests: object[] } }
         | { type: 'done.invoke.run-request'; data: { data: object[] } }
+        | { type: 'done.invoke.message-run-id'; data: number },
+      services: {} as {
+        queryRequests: {
+          data: { requests: object[] }
+        },
+        createCollectionRun: {
+          data: { id: number }
+        },
+        messageRunId: {
+          data: number
+        }
+      }
     },
     context: { collectionId: undefined, requestList: undefined, responses: [] },
     id: 'collectionRunner',
@@ -87,12 +99,25 @@ export const collectionRunnerMachine =
                 ]
               },
               {
-                target: '#collectionRunner.complete',
+                target: '#collectionRunner.messaging',
                 actions: 'assignResponses',
               }]
             }
           },
         },
+      },
+      messaging: {
+        invoke: {
+          id: 'message-run-id',
+          src: (context, event) => invokeMessageRunId(context.collectionRunId, context.responses),
+          data: {
+            collectionRunId: (context, event) => context.collectionRunId,
+            responses: (context, event) => context.responses
+          },
+          onDone: {
+            target: 'complete',
+          }
+        }
       },
       complete: {
         type: 'final',
@@ -132,6 +157,6 @@ export const collectionRunnerMachine =
       },
       services: {
         queryRequests: (context, event) => invokeQueryRequests(context.collectionId),
-        createCollectionRun: (context, event) => invokeCreateCollectionRun(context.collectionId)
+        createCollectionRun: (context, event) => invokeCreateCollectionRun(context.collectionId),
       }
     })
