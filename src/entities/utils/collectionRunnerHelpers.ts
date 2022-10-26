@@ -8,18 +8,13 @@ export async function invokeQueryRequests(collectionId) {
   query Requests($where: RequestWhereInput, $orderBy: [RequestOrderByWithRelationInput!]) {
   requests(where: $where, orderBy: $orderBy) {
     id
+    collectionId
     stepNumber
     title
-    body
     method
-    headers
     url
-    assertions {
-      id
-      property
-      expected
-    }
-    collectionId
+    headers
+    body
   }
 }`
 
@@ -48,7 +43,6 @@ export async function invokeCreateCollectionRun(collectionId) {
 
   const mutationVariables = {
     "data": {
-      "success": true,
       "Collection": {
         "connect": {
           "id": collectionId

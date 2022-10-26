@@ -10,7 +10,7 @@ interface Configuration {
 }
 
 export async function invokeFetchAPICall(request, collectionRunId) {
-  let { id: requestId, url, method, headers, body, assertions } = request
+  let { url, method, headers, body } = request
   let config: Configuration = { method, headers };
   if (method.toUpperCase() !== "GET") {
     config = { ...config, body };
@@ -24,19 +24,20 @@ export async function invokeFetchAPICall(request, collectionRunId) {
   const responseVariables = {
     data: {
       status: fetchResponse.status,
-      headers: fetchResponse.headers,
       latency: timeForRequest,
+      headers: fetchResponse.headers,
       body: json,
       CollectionRun: {
         connect: {
           id: collectionRunId
         }
       },
-      request: {
-        connect: {
-          id: Number(requestId)
-        }
-      }
+      requestTitle: request.title,
+      requestMethod: method,
+      requestUrl: url,
+      requestHeaders: headers,
+      requestBody: body,
+      requestStepNumber: request.stepNumber
     }
   }
 
