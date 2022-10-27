@@ -56,11 +56,7 @@ export async function invokeCreateCollectionRun(collectionId) {
 }
 
 export async function invokeMessageRunId(collectionRunId, responses) {
-  const fetchResponse = await fetch(`http://localhost:3005/${collectionRunId}`, {
-    method: 'POST',
-    body: JSON.stringify(responses),
-    headers: { 'Content-Type': 'application/json' }
-  })
+  const fetchResponse = await fetch(`http://localhost:3005/${collectionRunId}`);
   return fetchResponse.status
 }
 

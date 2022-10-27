@@ -24,20 +24,19 @@ export async function invokeFetchAPICall(request, collectionRunId) {
   const responseVariables = {
     data: {
       status: fetchResponse.status,
-      latency: timeForRequest,
       headers: fetchResponse.headers,
       body: json,
+      latency: timeForRequest,
       CollectionRun: {
         connect: {
           id: collectionRunId
         }
       },
-      requestTitle: request.title,
-      requestMethod: method,
-      requestUrl: url,
-      requestHeaders: headers,
-      requestBody: body,
-      requestStepNumber: request.stepNumber
+      Request: {
+        connect: {
+          id: Number(request.id)
+        }
+      }
     }
   }
 
