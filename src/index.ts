@@ -10,17 +10,20 @@ const PORT = 3003
 
 app.get('/:id', async (req, res) => {
   const collectionId = Number(req.params.id)
+  if (!collectionId) {
+    res.sendStatus(400)
+  } else {
+    const collectionRunnerService = interpret(collectionRunnerMachine)
+      .onTransition(state => console.log(state.value, state.context)) // FOR LOGGING
 
-  const collectionRunnerService = interpret(collectionRunnerMachine)
-    .onTransition(state => console.log(state.value, state.context)) // FOR LOGGING
+    collectionRunnerService.start()
+    collectionRunnerService.send({ type: 'QUERY', collectionId: collectionId })
+    await waitFor(collectionRunnerService, (state) => state.matches('complete'))
+    collectionRunnerService.stop()
 
-  collectionRunnerService.start()
-  collectionRunnerService.send({ type: 'QUERY', collectionId: collectionId })
-  await waitFor(collectionRunnerService, (state) => state.matches('complete'))
-  collectionRunnerService.stop()
-
-  res.header('Access-Control-Allow-Origin', '*');
-  res.sendStatus(200)
+    res.header('Access-Control-Allow-Origin', '*');
+    res.sendStatus(200)
+  }
 })
 
 app.listen(PORT, () => {
