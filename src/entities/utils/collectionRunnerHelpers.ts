@@ -11,13 +11,19 @@ export async function invokeQueryRequests(collectionId) {
     ) {
       requests(where: $where, orderBy: $orderBy) {
         id
-        collectionId
-        stepNumber
         title
-        method
         url
+        method
         headers
         body
+        stepNumber
+        collectionId
+        assertions {
+          property
+          comparison
+          expected
+          requestId
+        }
       }
     }
   `;
@@ -64,7 +70,20 @@ export async function invokeCreateCollectionRun(collectionId) {
 }
 
 export async function invokeMessageRunId(collectionRunId, responses) {
-  const fetchResponse = await fetch(`http://localhost:3005/${collectionRunId}`);
+  const data = JSON.stringify(responses);
+  console.log("data before sending it to assertion runner", responses);
+
+  const fetchResponse = await fetch(
+    `http://localhost:3005/${collectionRunId}`,
+    {
+      method: "POST",
+      body: data,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
   return fetchResponse.status;
 }
 

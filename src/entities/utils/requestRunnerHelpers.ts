@@ -1,7 +1,7 @@
-import { GraphQLClient, gql } from 'graphql-request'
-import fetch from 'node-fetch';
-const endpoint = 'http://localhost:3001/graphql'
-const graphQLClient = new GraphQLClient(endpoint)
+import { GraphQLClient, gql } from "graphql-request";
+import fetch from "node-fetch";
+const endpoint = "http://localhost:3001/graphql";
+const graphQLClient = new GraphQLClient(endpoint);
 
 interface Configuration {
   method: string;
@@ -10,17 +10,17 @@ interface Configuration {
 }
 
 export async function invokeFetchAPICall(request, collectionRunId) {
-  let { url, method, headers, body } = request
+  let { url, method, headers, body, assertions } = request;
   let config: Configuration = { method, headers };
   if (method.toUpperCase() !== "GET") {
     config = { ...config, body };
   }
 
-  const timestampStart = Date.now()
-  let fetchResponse = await fetch(url, config)
-  const timeForRequest = Date.now() - timestampStart
+  const timestampStart = Date.now();
+  let fetchResponse = await fetch(url, config);
+  const timeForRequest = Date.now() - timestampStart;
 
-  let json = await fetchResponse.json()
+  let json = await fetchResponse.json();
   const responseVariables = {
     data: {
       status: fetchResponse.status,
@@ -29,19 +29,14 @@ export async function invokeFetchAPICall(request, collectionRunId) {
       body: json,
       CollectionRun: {
         connect: {
-          id: collectionRunId
-        }
+          id: collectionRunId,
+        },
       },
-      requestTitle: request.title,
-      requestMethod: method,
-      requestUrl: url,
-      requestHeaders: headers,
-      requestBody: body,
-      requestStepNumber: request.stepNumber
-    }
-  }
+      assertions,
+    },
+  };
 
-  return responseVariables
+  return responseVariables;
 }
 
 export async function invokeSaveResponse(responseData) {
@@ -49,9 +44,20 @@ export async function invokeSaveResponse(responseData) {
     mutation CreateOneResponse($data: ResponseCreateInput!) {
       createOneResponse(data: $data) {
         id
+        status
+        headers
+        body
+        latency
+        assertions
       }
-    }`
+    }
+  `;
 
-  const databaseResponse = await graphQLClient.request(responseMutation, responseData)
-  return databaseResponse.createOneResponse.id
+  const databaseResponse = await graphQLClient.request(
+    responseMutation,
+    responseData
+  );
+
+  //here the returned response has id property
+  return databaseResponse.createOneResponse;
 }
