@@ -1,7 +1,8 @@
 import { createMachine, assign } from 'xstate';
 import { requestRunnerMachine } from './requestRunnerMachine.js'
 import { requestProcessorMachine } from './requestProcessorMachine.js'
-import { invokeQueryRequests, invokeCreateCollectionRun, invokeMessageRunId, listNotEmpty } from './utils/collectionRunnerHelpers.js';
+import { assertionRunnerMachine } from './assertionRunnerMachine.js';
+import { invokeQueryRequests, invokeCreateCollectionRun, invokeMessageRunId, listNotEmpty } from '../utils/collectionRunnerHelpers.js';
 
 export const collectionRunnerMachine =
   createMachine({
@@ -99,29 +100,42 @@ export const collectionRunnerMachine =
                 ]
               },
               {
-                target: '#collectionRunner.messaging',
+                target: '#collectionRunner.asserting',
                 actions: 'assignResponses',
               }]
             }
           },
         },
       },
-      messaging: {
+      asserting: {
         invoke: {
-          id: 'message-run-id',
-          src: 'messageRunId',
+          id: 'run-assertions',
+          src: assertionRunnerMachine,
           data: {
             collectionRunId: (context, event) => context.collectionRunId,
             responses: (context, event) => context.responses
           },
           onDone: {
-            target: 'complete',
-          },
-          onError: {
             target: 'complete'
           }
         }
       },
+      // messaging: {
+      //   invoke: {
+      //     id: 'message-run-id',
+      //     src: 'messageRunId',
+      //     data: {
+      //       collectionRunId: (context, event) => context.collectionRunId,
+      //       responses: (context, event) => context.responses
+      //     },
+      //     onDone: {
+      //       target: 'complete',
+      //     },
+      //     onError: {
+      //       target: 'complete'
+      //     }
+      //   }
+      // },
       complete: {
         type: 'final',
       },
@@ -161,6 +175,6 @@ export const collectionRunnerMachine =
       services: {
         queryRequests: (context, event) => invokeQueryRequests(context.collectionId),
         createCollectionRun: (context, event) => invokeCreateCollectionRun(context.collectionId),
-        messageRunId: (context, event) => invokeMessageRunId(context.collectionRunId, context.responses)
+        // messageRunId: (context, event) => invokeMessageRunId(context.collectionRunId, context.responses)
       }
     })

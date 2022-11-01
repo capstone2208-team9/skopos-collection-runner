@@ -10,6 +10,7 @@ interface Configuration {
 }
 
 export async function invokeFetchAPICall(request, collectionRunId) {
+  console.log(request)
   let { url, method, headers, body } = request
   let config: Configuration = { method, headers };
   if (method.toUpperCase() !== "GET") {
@@ -18,6 +19,7 @@ export async function invokeFetchAPICall(request, collectionRunId) {
 
   const timestampStart = Date.now()
   let fetchResponse = await fetch(url, config)
+  console.log(fetchResponse)
   const timeForRequest = Date.now() - timestampStart
 
   let json = await fetchResponse.json()
@@ -48,9 +50,26 @@ export async function invokeSaveResponse(responseData) {
     mutation CreateOneResponse($data: ResponseCreateInput!) {
       createOneResponse(data: $data) {
         id
+        status
+        headers
+        body
+        latency
+        Request {
+          assertions {
+            property
+            comparison
+            expected
+            id
+          }
+        }
       }
     }`
 
   const databaseResponse = await graphQLClient.request(responseMutation, responseData)
-  return databaseResponse.createOneResponse.id
+  console.log(databaseResponse.createOneResponse)
+  const response = {
+    data: { ...databaseResponse.createOneResponse }
+  }
+  console.log(response)
+  return response
 }

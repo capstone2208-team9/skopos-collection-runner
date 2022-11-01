@@ -1,5 +1,5 @@
 import { createMachine, assign } from 'xstate';
-import { invokeFetchAPICall, invokeSaveResponse } from './utils/requestRunnerHelpers.js'
+import { invokeFetchAPICall, invokeSaveResponse } from '../utils/requestRunnerHelpers.js'
 
 export const requestRunnerMachine = createMachine({
   predictableActionArguments: true,
@@ -12,7 +12,7 @@ export const requestRunnerMachine = createMachine({
     },
     events: {} as
       | { type: 'done.invoke.fetch-api-call'; data: object }
-      | { type: 'done.invoke.save-response'; data: number },
+      | { type: 'done.invoke.save-response'; data: object },
     services: {} as {
       fetchAPICall: {
         data: object
@@ -45,6 +45,7 @@ export const requestRunnerMachine = createMachine({
         src: 'saveResponse',
         onDone: {
           target: 'done',
+          actions: 'assignResponseData'
         }
       }
     },

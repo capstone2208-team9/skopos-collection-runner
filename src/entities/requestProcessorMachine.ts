@@ -1,5 +1,5 @@
 import { createMachine, assign } from 'xstate';
-import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from './utils/requestProcessorHelpers.js';
+import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from '../utils/requestProcessorHelpers.js';
 
 export const requestProcessorMachine = createMachine({
   predictableActionArguments: true,
