@@ -1,3 +1,5 @@
+import { gqlMutateCreateAssertionResults } from '../services/queries.js'
+
 function isPassing(
   actual: any,
   operator: string,
@@ -37,16 +39,6 @@ function isAssertionPassing(
 
   return isPassing(leftOperand, operator, rightoperand);
 }
-
-/*
-console.log(isAssertionPassing(5, "is null", undefined) === false);
-console.log(isAssertionPassing(null, "is null", undefined) === true);
-console.log(isAssertionPassing(5, "is equal to", 5) === true);
-console.log(isAssertionPassing(5, "is not less than", 5) === true);
-console.log(isAssertionPassing(6, "is greater than", 5) === true);
-console.log(isAssertionPassing([1, 2, 3], "includes", 5) === false);
-console.log(isAssertionPassing([1, 2, 3], "includes", 2) === true);
-*/
 
 const parseBody = (identifier: string, response: any): any => {
   let path = identifier.split(/\.|\[|\]/).filter((item) => item !== "");
@@ -108,6 +100,10 @@ export const invokeCheckAssertions = async (
   assertionVerdict(response)
   return assertionResults;
 };
+
+export const invokeSaveAssertionResults = async (listOfAssertionResults) => {
+  return await gqlMutateCreateAssertionResults(listOfAssertionResults)
+}
 
 export const assertionFailed = (context, event) => {
   for (let i = 0, len = context.assertionResults.length; i < len; i += 1) {

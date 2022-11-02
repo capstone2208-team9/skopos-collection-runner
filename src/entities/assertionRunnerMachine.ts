@@ -5,7 +5,7 @@ import {
   AssertionRunnerServices,
 } from "../types.js";
 import { invokeCheckAssertions, assertionFailed } from "../utils/assertionRunnerHelpers.js";
-import { invokeSaveAssertionResults } from "../services/queries.js";
+import { invokeSaveAssertionResults } from "../utils/assertionRunnerHelpers.js";
 import { escalate } from "xstate/lib/actions.js";
 
 //

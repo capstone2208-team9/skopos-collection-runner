@@ -1,11 +1,12 @@
+import express from 'express'
 import { interpret } from 'xstate';
 import { waitFor } from 'xstate/lib/waitFor.js';
+import { collectionRunnerMachine } from './entities/collectionRunnerMachine.js';
 import cors from 'cors'
 
-import { collectionRunnerMachine } from './entities/collectionRunnerMachine.js';
-import express from 'express'
 const app = express()
 app.use(cors())
+
 const PORT = 3003
 
 app.get('/:id', async (req, res) => {
@@ -27,5 +28,5 @@ app.get('/:id', async (req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`Test runner running on port ${PORT}`)
+  console.log(`Collection runner listening on port ${PORT}`)
 })
