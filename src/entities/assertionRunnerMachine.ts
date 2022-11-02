@@ -4,10 +4,9 @@ import {
   AssertionRunnerEvent,
   AssertionRunnerServices,
 } from "../types.js";
-import { invokeCheckAssertions } from "../utils/assertionRunnerHelpers.js";
-import {
-  invokeSaveAssertionResults,
-} from "../services/queries.js";
+import { invokeCheckAssertions, assertionFailed } from "../utils/assertionRunnerHelpers.js";
+import { invokeSaveAssertionResults } from "../services/queries.js";
+import { escalate } from "xstate/lib/actions.js";
 
 //
 export const assertionRunnerMachine =
@@ -15,8 +14,7 @@ export const assertionRunnerMachine =
   createMachine(
     {
       context: {
-        collectionRunId: null,
-        responses: null,
+        response: null,
         assertionResults: null,
       },
       predictableActionArguments: true,
@@ -45,34 +43,38 @@ export const assertionRunnerMachine =
           invoke: {
             src: "saveAssertionResults",
             id: "save-assertion-results",
-            onDone: [
-              {
-                target: "complete",
-                actions: "assignAssertionResults",
+            onDone:
+              [{
+                target: 'failed',
+                cond: { type: 'assertionFailed' },
               },
-            ],
+              {
+                target: 'complete',
+                actions: "assignAssertionResults",
+              }],
           },
         },
         complete: {
           type: "final",
         },
+        failed: {
+          type: "final",
+          entry: escalate({ message: 'An assertion failed' })
+        }
       },
     },
     {
       actions: {
-        // assignCollectionRunId: assign({
-        //   collectionRunId: (context, event) => event["collectionRunId"],
-        // }),
-        // assignResponses: assign({
-        //   responses: (context, event) => event["data"],
-        // }),
         assignAssertionResults: assign({
           assertionResults: (context, event) => event["data"],
         }),
       },
+      guards: {
+        assertionFailed
+      },
       services: {
         checkAssertions: (context, event) =>
-          invokeCheckAssertions(context.responses),
+          invokeCheckAssertions(context.response),
         saveAssertionResults: (context, event) =>
           invokeSaveAssertionResults(context.assertionResults),
       },

@@ -55,9 +55,4 @@ export async function invokeCreateCollectionRun(collectionId) {
   return databaseResponse.createOneCollectionRun
 }
 
-export async function invokeMessageRunId(collectionRunId, responses) {
-  const fetchResponse = await fetch(`http://localhost:3005/${collectionRunId}`);
-  return fetchResponse.status
-}
-
 export const listNotEmpty = (context, event) => context.requestList.length > 1

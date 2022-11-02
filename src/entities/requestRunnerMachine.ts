@@ -1,4 +1,5 @@
 import { createMachine, assign } from 'xstate';
+import { escalate } from 'xstate/lib/actions.js';
 import { invokeFetchAPICall, invokeSaveResponse } from '../utils/requestRunnerHelpers.js'
 
 export const requestRunnerMachine = createMachine({
@@ -36,6 +37,9 @@ export const requestRunnerMachine = createMachine({
         onDone: {
           target: 'loaded',
           actions: 'assignResponseData'
+        },
+        onError: {
+          target: 'failed'
         }
       }
     },
@@ -46,6 +50,9 @@ export const requestRunnerMachine = createMachine({
         onDone: {
           target: 'done',
           actions: 'assignResponseData'
+        },
+        onError: {
+          target: 'failed'
         }
       }
     },
@@ -53,7 +60,10 @@ export const requestRunnerMachine = createMachine({
       type: 'final',
       data: (context, event) => context.responseData
     },
-    failed: {}
+    failed: {
+      type: "final",
+      entry: escalate({ message: 'An error occurred' })
+    }
   }
 },
   {

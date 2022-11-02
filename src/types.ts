@@ -4,8 +4,6 @@
 //   body?: string;
 // }
 
-import { AnyARecord } from "dns";
-
 // // REQUEST RUNNER MACHINE TYPES
 // export type RequestRunnerEvent =
 //   | { type: 'done.invoke.fetch-api-call'; data: object[] }
@@ -13,20 +11,17 @@ import { AnyARecord } from "dns";
 //   | { type: 'done.invoke.check-assertions'; data: object[] }
 
 export interface AssertionRunnerContext {
-  collectionRunId: number | null;
-  responses: Array<object> | null;
+  response: object | null;
   assertionResults: Array<any> | null;
 }
 
 export type AssertionRunnerEvent =
-  | { type: "START"; collectionRunId: number }
-  | { type: "done.invoke.get-responses"; data: { responses: object[] } }
-  | { type: "done.invoke.save-assertion-results"; data: any[] }
+  | { type: "done.invoke.save-assertion-results"; data: any }
   | { type: "done.invoke.check-assertions"; data: any[] };
 
 export type AssertionRunnerServices = {
   saveAssertionResults: {
-    data: { responses: any };
+    data: { response: any };
   };
   checkAssertions: {
     data: any;

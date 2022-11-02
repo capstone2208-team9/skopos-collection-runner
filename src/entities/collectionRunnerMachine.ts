@@ -2,7 +2,7 @@ import { createMachine, assign } from 'xstate';
 import { requestRunnerMachine } from './requestRunnerMachine.js'
 import { requestProcessorMachine } from './requestProcessorMachine.js'
 import { assertionRunnerMachine } from './assertionRunnerMachine.js';
-import { invokeQueryRequests, invokeCreateCollectionRun, invokeMessageRunId, listNotEmpty } from '../utils/collectionRunnerHelpers.js';
+import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty } from '../utils/collectionRunnerHelpers.js';
 
 export const collectionRunnerMachine =
   createMachine({
@@ -14,13 +14,13 @@ export const collectionRunnerMachine =
         collectionRunId?: number
         requestList?: object[]
         responses?: object[]
+        currentResponse?: object
       },
       events: {} as { type: 'QUERY'; collectionId: number }
         | { type: 'done.invoke.query-requests'; data: { requests: object[] } }
         | { type: 'done.invoke.initialize-collection-run'; data: { id: number } }
         | { type: 'done.invoke.process-request'; data: { requests: object[] } }
-        | { type: 'done.invoke.run-request'; data: { data: object[] } }
-        | { type: 'done.invoke.message-run-id'; data: number },
+        | { type: 'done.invoke.run-request'; data: object },
       services: {} as {
         queryRequests: {
           data: { requests: object[] }
@@ -28,12 +28,9 @@ export const collectionRunnerMachine =
         createCollectionRun: {
           data: { id: number }
         },
-        messageRunId: {
-          data: number
-        }
       }
     },
-    context: { collectionId: undefined, requestList: undefined, responses: [] },
+    context: { collectionId: undefined, requestList: undefined, responses: [], currentResponse: undefined },
     id: 'collectionRunner',
     initial: 'idle',
     states: {
@@ -53,7 +50,9 @@ export const collectionRunnerMachine =
             target: 'initializing',
             actions: 'assignRequestList'
           },
-          onError: {}
+          onError: {
+            target: 'failed'
+          }
         },
       },
       initializing: {
@@ -63,6 +62,9 @@ export const collectionRunnerMachine =
           onDone: {
             target: 'running',
             actions: 'assignCollectionRunId'
+          },
+          onError: {
+            target: 'failed'
           }
         }
       },
@@ -74,12 +76,15 @@ export const collectionRunnerMachine =
               id: 'process-request',
               src: requestProcessorMachine,
               data: {
-                request: (context, event) => context.requestList[0],
-                responses: (context, event) => context.responses
+                request: (context, _event) => context.requestList[0],
+                responses: (context, _event) => context.responses
               },
               onDone: {
                 target: 'requesting',
                 actions: 'assignProcessedRequestToList'
+              },
+              onError: {
+                target: '#collectionRunner.failed'
               }
             },
           },
@@ -88,70 +93,64 @@ export const collectionRunnerMachine =
               id: 'run-request',
               src: requestRunnerMachine,
               data: {
-                request: (context, event) => context.requestList[0],
-                collectionRunId: (context, event) => context.collectionRunId
+                request: (context, _event) => context.requestList[0],
+                collectionRunId: (context, _event) => context.collectionRunId
+              },
+              onDone: {
+                target: '#collectionRunner.running.asserting',
+                actions: [
+                  'assignCurrentResponse',
+                  'assignResponses',
+                ]
+              },
+              onError: {
+                target: '#collectionRunner.failed'
+              }
+            }
+          },
+          asserting: {
+            invoke: {
+              id: 'run-assertions',
+              src: assertionRunnerMachine,
+              data: {
+                response: (context, _event) => context.currentResponse
               },
               onDone: [{
                 target: '#collectionRunner.running.processing',
                 cond: { type: 'listNotEmpty' },
                 actions: [
-                  'assignResponses',
                   'assignRemoveCompletedRequestFromList'
                 ]
               },
               {
-                target: '#collectionRunner.asserting',
-                actions: 'assignResponses',
-              }]
+                target: '#collectionRunner.complete'
+              }],
+              onError: {
+                target: '#collectionRunner.failed'
+              }
             }
-          },
+          }
         },
       },
-      asserting: {
-        invoke: {
-          id: 'run-assertions',
-          src: assertionRunnerMachine,
-          data: {
-            collectionRunId: (context, event) => context.collectionRunId,
-            responses: (context, event) => context.responses
-          },
-          onDone: {
-            target: 'complete'
-          }
-        }
-      },
-      // messaging: {
-      //   invoke: {
-      //     id: 'message-run-id',
-      //     src: 'messageRunId',
-      //     data: {
-      //       collectionRunId: (context, event) => context.collectionRunId,
-      //       responses: (context, event) => context.responses
-      //     },
-      //     onDone: {
-      //       target: 'complete',
-      //     },
-      //     onError: {
-      //       target: 'complete'
-      //     }
-      //   }
-      // },
       complete: {
         type: 'final',
       },
+      failed: {
+        type: 'final'
+      }
     },
   },
     {
       actions: {
         // action implementation
         'assignCollectionId': assign({
-          collectionId: (context, event) => event.collectionId,
+          collectionId: (_context, event) => event.collectionId,
         }),
         'assignRequestList': assign({
-          requestList: (context, event) => event.data.requests
+          requestList: (_context, event) => event.data.requests
         }),
         'assignCollectionRunId': assign({
-          collectionRunId: (context, event) => event.data.id
+          collectionRunId: (_context, event) => event.data.id
         }),
         'assignProcessedRequestToList': assign({
           requestList: (context, event) => {
@@ -160,11 +159,14 @@ export const collectionRunnerMachine =
           }
         }),
         'assignResponses': assign({
-          responses: (context, event) => context.responses.concat(event.data.data)
+          responses: (context, event) => context.responses.concat(event.data)
         }),
         'assignRemoveCompletedRequestFromList': assign({
-          requestList: (context, event) => context.requestList.slice(1)
-        })
+          requestList: (context, _event) => context.requestList.slice(1)
+        }),
+        'assignCurrentResponse': assign({
+          currentResponse: (_context, event) => event.data
+        }),
       },
       delays: {
         // no delays here
@@ -173,8 +175,7 @@ export const collectionRunnerMachine =
         listNotEmpty
       },
       services: {
-        queryRequests: (context, event) => invokeQueryRequests(context.collectionId),
-        createCollectionRun: (context, event) => invokeCreateCollectionRun(context.collectionId),
-        // messageRunId: (context, event) => invokeMessageRunId(context.collectionRunId, context.responses)
+        queryRequests: (context, _event) => invokeQueryRequests(context.collectionId),
+        createCollectionRun: (context, _event) => invokeCreateCollectionRun(context.collectionId),
       }
     })

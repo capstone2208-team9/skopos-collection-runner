@@ -81,7 +81,7 @@ export const interpolateReferences = (listOfAssertions: any[], response): any[] 
 }
 
 export const invokeCheckAssertions = async (
-  listOfResponses
+  response
 ): Promise<any[]> => {
   let assertionResults = [];
 
@@ -105,32 +105,13 @@ export const invokeCheckAssertions = async (
     });
   };
 
-  listOfResponses.forEach(assertionVerdict);
-  console.log(assertionResults, "assertionResults")
+  assertionVerdict(response)
   return assertionResults;
 };
 
-//this function is for processing the data received from query
-export const organizeResponseAssertions = (listOfResponses: any[]) => {
-  // [ {response: {}}, {}]; take out assertions from each: { response: {}, assertions: []}
-
-  return listOfResponses.map(res => {
-    return {
-      response: { ...res },
-      assertions: res.request.assertions
-    }
-
-    let assertions = res.request.assertions
-
-    assertions = assertions.map((assertion: any) => ({ ...assertion, responseId: res.id }))
-
-    return {
-      data: {
-        responses: [{
-          ...res
-        }],
-        assertions
-      }
-    }
-  })
+export const assertionFailed = (context, event) => {
+  for (let i = 0, len = context.assertionResults.length; i < len; i += 1) {
+    if (context.assertionResults[i]['pass'] === false) return true;
+  }
+  return false;
 }

@@ -66,10 +66,6 @@ export async function invokeSaveResponse(responseData) {
     }`
 
   const databaseResponse = await graphQLClient.request(responseMutation, responseData)
-  console.log(databaseResponse.createOneResponse)
-  const response = {
-    data: { ...databaseResponse.createOneResponse }
-  }
-  console.log(response)
+  const response = databaseResponse.createOneResponse
   return response
 }
