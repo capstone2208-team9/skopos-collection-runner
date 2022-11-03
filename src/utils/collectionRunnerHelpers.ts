@@ -9,3 +9,4 @@ export const invokeCreateCollectionRun = async (collectionId) => {
 }
 
 export const listNotEmpty = (context, event) => context.requestList.length > 1
+export const requestListExists = (context, event) => context.requestList !== undefined

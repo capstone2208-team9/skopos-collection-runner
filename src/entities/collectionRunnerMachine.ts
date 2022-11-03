@@ -2,7 +2,8 @@ import { createMachine, assign } from 'xstate';
 import { requestRunnerMachine } from './requestRunnerMachine.js'
 import { requestProcessorMachine } from './requestProcessorMachine.js'
 import { assertionRunnerMachine } from './assertionRunnerMachine.js';
-import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty } from '../utils/collectionRunnerHelpers.js';
+import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty, requestListExists } from '../utils/collectionRunnerHelpers.js';
+import { log } from 'xstate/lib/actions.js';
 
 export const collectionRunnerMachine =
   createMachine({
@@ -46,10 +47,15 @@ export const collectionRunnerMachine =
         invoke: {
           id: 'query-requests',
           src: 'queryRequests',
-          onDone: {
+          onDone: [{
             target: 'initializing',
+            cond: { type: 'requestListExists' },
             actions: 'assignRequestList'
           },
+          {
+            target: 'failed',
+            actions: log((context, event) => `Request list query unsuccessful.`)
+          }],
           onError: {
             target: 'failed'
           }
@@ -104,7 +110,8 @@ export const collectionRunnerMachine =
                 ]
               },
               onError: {
-                target: '#collectionRunner.failed'
+                target: '#collectionRunner.failed',
+                actions: log((context, event) => `Collection Run Error: ${event.data.message}`)
               }
             }
           },
@@ -118,15 +125,14 @@ export const collectionRunnerMachine =
               onDone: [{
                 target: '#collectionRunner.running.processing',
                 cond: { type: 'listNotEmpty' },
-                actions: [
-                  'assignRemoveCompletedRequestFromList'
-                ]
+                actions: 'assignRemoveCompletedRequestFromList'
               },
               {
                 target: '#collectionRunner.complete'
               }],
               onError: {
-                target: '#collectionRunner.failed'
+                target: '#collectionRunner.failed',
+                actions: log((context, event) => `Collection Run Error: ${event.data.message}}`)
               }
             }
           }
@@ -136,8 +142,9 @@ export const collectionRunnerMachine =
         type: 'final',
       },
       failed: {
-        type: 'final'
-      }
+        type: 'final',
+        entry: log('Collection run aborted.')
+      },
     },
   },
     {
@@ -172,7 +179,8 @@ export const collectionRunnerMachine =
         // no delays here
       },
       guards: {
-        listNotEmpty
+        listNotEmpty,
+        requestListExists
       },
       services: {
         queryRequests: (context, _event) => invokeQueryRequests(context.collectionId),

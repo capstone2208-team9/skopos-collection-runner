@@ -1,5 +1,5 @@
-FROM node:18-alpine as base
-RUN apk update 
+FROM node:18-bullseye-slim as base
+RUN apt-get update
 
 WORKDIR /home/collection-runner
 

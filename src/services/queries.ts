@@ -1,12 +1,12 @@
 import { GraphQLClient, gql } from "graphql-request";
-// import * as dotenv from 'dotenv'
-// import path from 'path';
-// import url from 'url';
+import * as dotenv from 'dotenv'
+import path from 'path';
+import url from 'url';
 
-// const __filename = url.fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// dotenv.config({ path: __dirname + '/../../.env' });
+dotenv.config({ path: __dirname + '/../../.env' });
 
 const endpoint = process.env.GRAPHQL_URL;
 const graphQLClient = new GraphQLClient(endpoint);
@@ -35,8 +35,13 @@ export const gqlMutateCreateAssertionResults = async (
     data: formattedResults,
   };
 
-  const data = await graphQLClient.request(query, queryVariables);
-  return data;
+  try {
+    const databaseResponse = await graphQLClient.request(query, queryVariables);
+    return databaseResponse
+  } catch (error) {
+    console.error(JSON.stringify(error, undefined, 2))
+    return undefined
+  }
 };
 
 export const gqlQueryResponses = async (collectionRunId): Promise<any[]> => {
@@ -68,8 +73,14 @@ export const gqlQueryResponses = async (collectionRunId): Promise<any[]> => {
     },
   };
 
-  const data = await graphQLClient.request(query, queryVariables);
-  return data.responses;
+
+  try {
+    const databaseResponse = await graphQLClient.request(query, queryVariables);
+    return databaseResponse.responses
+  } catch (error) {
+    console.error(JSON.stringify(error, undefined, 2))
+    return undefined
+  }
 };
 
 export const gqlQueryRequests = async (collectionId) => {
@@ -103,8 +114,13 @@ export const gqlQueryRequests = async (collectionId) => {
     },
   };
 
-  const data = await graphQLClient.request(query, queryVariables);
-  return data;
+  try {
+    const databaseResponse = await graphQLClient.request(query, queryVariables);
+    return databaseResponse
+  } catch (error) {
+    console.error(JSON.stringify(error, undefined, 2))
+    return undefined
+  }
 };
 
 export const gqlMutateCreateCollectionRun = async (collectionId) => {
@@ -126,11 +142,13 @@ export const gqlMutateCreateCollectionRun = async (collectionId) => {
     },
   };
 
-  const databaseResponse = await graphQLClient.request(
-    mutation,
-    mutationVariables
-  );
-  return databaseResponse.createOneCollectionRun;
+  try {
+    const databaseResponse = await graphQLClient.request(mutation, mutationVariables);
+    return databaseResponse.createOneCollectionRun;
+  } catch (error) {
+    console.error(JSON.stringify(error, undefined, 2))
+    return undefined
+  }
 };
 
 export const gqlMutateCreateResponse = async (responseData) => {
@@ -154,10 +172,11 @@ export const gqlMutateCreateResponse = async (responseData) => {
     }
   `;
 
-  const databaseResponse = await graphQLClient.request(
-    responseMutation,
-    responseData
-  );
-  const response = databaseResponse.createOneResponse;
-  return response;
+  try {
+    const databaseResponse = await graphQLClient.request(responseMutation, responseData);
+    return databaseResponse.createOneResponse;
+  } catch (error) {
+    console.error(JSON.stringify(error, undefined, 2))
+    return undefined
+  }
 };

@@ -37,6 +37,9 @@ export const assertionRunnerMachine =
                 actions: "assignAssertionResults",
               },
             ],
+            onError: {
+              target: 'failedGeneric'
+            }
           },
         },
         saving: {
@@ -45,21 +48,32 @@ export const assertionRunnerMachine =
             id: "save-assertion-results",
             onDone:
               [{
-                target: 'failed',
+                target: 'failedCheck',
                 cond: { type: 'assertionFailed' },
               },
               {
                 target: 'complete',
                 actions: "assignAssertionResults",
               }],
+            onError: {
+              target: 'failedGeneric'
+            }
           },
         },
         complete: {
           type: "final",
         },
-        failed: {
+        failedCheck: {
           type: "final",
           entry: escalate({ message: 'An assertion failed' })
+        },
+        failedSave: {
+          type: "final",
+          entry: escalate({ message: 'An error occurred saving assertion results to the database' })
+        },
+        failedGeneric: {
+          type: "final",
+          entry: escalate({ message: 'An error occurred in the assertion runner' })
         }
       },
     },

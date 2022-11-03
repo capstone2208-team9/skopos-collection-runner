@@ -18,6 +18,10 @@ export async function invokeFetchAPICall(request, collectionRunId) {
   let fetchResponse = await fetch(url, config)
   const timeForRequest = Date.now() - timestampStart
 
+  if (!fetchResponse.ok) {
+    throw Error(fetchResponse.statusText);
+  }
+
   let json = await fetchResponse.json()
   const responseVariables = {
     data: {

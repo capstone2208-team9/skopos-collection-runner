@@ -1,5 +1,5 @@
 import { createMachine, assign } from 'xstate';
-import { escalate } from 'xstate/lib/actions.js';
+import { escalate, log } from 'xstate/lib/actions.js';
 import { invokeFetchAPICall, invokeSaveResponse } from '../utils/requestRunnerHelpers.js'
 
 export const requestRunnerMachine = createMachine({
@@ -39,7 +39,8 @@ export const requestRunnerMachine = createMachine({
           actions: 'assignResponseData'
         },
         onError: {
-          target: 'failed'
+          target: 'failedFetch',
+          actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
         }
       }
     },
@@ -52,7 +53,8 @@ export const requestRunnerMachine = createMachine({
           actions: 'assignResponseData'
         },
         onError: {
-          target: 'failed'
+          target: 'failedSave',
+          actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
         }
       }
     },
@@ -60,9 +62,13 @@ export const requestRunnerMachine = createMachine({
       type: 'final',
       data: (context, event) => context.responseData
     },
-    failed: {
+    failedFetch: {
       type: "final",
-      entry: escalate({ message: 'An error occurred' })
+      entry: escalate({ message: 'An error occurred fetching response for an API call' })
+    },
+    failedSave: {
+      type: "final",
+      entry: escalate({ message: 'An error occurred saving a response to the database' })
     }
   }
 },
