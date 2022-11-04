@@ -1,12 +1,14 @@
 import { GraphQLClient, gql } from "graphql-request";
-import * as dotenv from 'dotenv'
-import path from 'path';
-import url from 'url';
 
-const __filename = url.fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// FOR LOCALHOST DEVELOPMENT
+// import * as dotenv from 'dotenv'
+// import path from 'path';
+// import url from 'url';
 
-dotenv.config({ path: __dirname + '/../../.env' });
+// const __filename = url.fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+// dotenv.config({ path: __dirname + '/../../.env' });
 
 const endpoint = process.env.GRAPHQL_URL;
 const graphQLClient = new GraphQLClient(endpoint);
