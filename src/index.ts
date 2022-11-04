@@ -16,7 +16,7 @@ app.post("/:id", async (req, res) => {
   } else {
     const collectionRunnerService = interpret(
       collectionRunnerMachine
-    ).onTransition((state) => console.log(state.value, state.context)); // FOR LOGGING
+    ).onTransition((state) => console.log('Entering state:', state.value, state.context)); // FOR LOGGING
 
     collectionRunnerService.start();
     collectionRunnerService.send({ type: "QUERY", collectionId: collectionId });

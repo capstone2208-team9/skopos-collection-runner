@@ -29,12 +29,12 @@ export async function invokeFetchAPICall(request, collectionRunId) {
       headers: fetchResponse.headers,
       body: json,
       latency: timeForRequest,
-      CollectionRun: {
+      collectionRun: {
         connect: {
           id: collectionRunId
         }
       },
-      Request: {
+      request: {
         connect: {
           id: Number(request.id)
         }
