@@ -1,5 +1,6 @@
 import { createMachine, assign } from 'xstate';
-import { invokeFetchAPICall, invokeSaveResponse } from './utils/requestRunnerHelpers.js'
+import { escalate, log } from 'xstate/lib/actions.js';
+import { invokeFetchAPICall, invokeSaveResponse } from '../utils/requestRunnerHelpers.js'
 
 export const requestRunnerMachine = createMachine({
   predictableActionArguments: true,
@@ -12,7 +13,7 @@ export const requestRunnerMachine = createMachine({
     },
     events: {} as
       | { type: 'done.invoke.fetch-api-call'; data: object }
-      | { type: 'done.invoke.save-response'; data: number },
+      | { type: 'done.invoke.save-response'; data: object },
     services: {} as {
       fetchAPICall: {
         data: object
@@ -36,6 +37,10 @@ export const requestRunnerMachine = createMachine({
         onDone: {
           target: 'loaded',
           actions: 'assignResponseData'
+        },
+        onError: {
+          target: 'failedFetch',
+          actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
         }
       }
     },
@@ -45,6 +50,11 @@ export const requestRunnerMachine = createMachine({
         src: 'saveResponse',
         onDone: {
           target: 'done',
+          actions: 'assignResponseData'
+        },
+        onError: {
+          target: 'failedSave',
+          actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
         }
       }
     },
@@ -52,7 +62,14 @@ export const requestRunnerMachine = createMachine({
       type: 'final',
       data: (context, event) => context.responseData
     },
-    failed: {}
+    failedFetch: {
+      type: "final",
+      entry: escalate({ message: 'An error occurred fetching response for an API call' })
+    },
+    failedSave: {
+      type: "final",
+      entry: escalate({ message: 'An error occurred saving a response to the database' })
+    }
   }
 },
   {

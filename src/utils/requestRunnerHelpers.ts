@@ -1,7 +1,5 @@
-import { GraphQLClient, gql } from 'graphql-request'
 import fetch from 'node-fetch';
-const endpoint = 'http://localhost:3001/graphql'
-const graphQLClient = new GraphQLClient(endpoint)
+import { gqlMutateCreateResponse } from '../services/queries.js'
 
 interface Configuration {
   method: string;
@@ -19,6 +17,10 @@ export async function invokeFetchAPICall(request, collectionRunId) {
   const timestampStart = Date.now()
   let fetchResponse = await fetch(url, config)
   const timeForRequest = Date.now() - timestampStart
+
+  if (!fetchResponse.ok) {
+    throw Error(fetchResponse.statusText);
+  }
 
   let json = await fetchResponse.json()
   const responseVariables = {
@@ -44,13 +46,5 @@ export async function invokeFetchAPICall(request, collectionRunId) {
 }
 
 export async function invokeSaveResponse(responseData) {
-  const responseMutation = gql`
-    mutation CreateOneResponse($data: ResponseCreateInput!) {
-      createOneResponse(data: $data) {
-        id
-      }
-    }`
-
-  const databaseResponse = await graphQLClient.request(responseMutation, responseData)
-  return databaseResponse.createOneResponse.id
+  return await gqlMutateCreateResponse(responseData)
 }

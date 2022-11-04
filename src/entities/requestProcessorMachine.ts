@@ -1,5 +1,6 @@
 import { createMachine, assign } from 'xstate';
-import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from './utils/requestProcessorHelpers.js';
+import { escalate } from 'xstate/lib/actions.js';
+import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from '../utils/requestProcessorHelpers.js';
 
 export const requestProcessorMachine = createMachine({
   predictableActionArguments: true,
@@ -40,6 +41,9 @@ export const requestProcessorMachine = createMachine({
         onDone: {
           target: "searching",
           actions: 'assignVariablesAndPaths'
+        },
+        onError: {
+          target: 'failed'
         }
       }
     },
@@ -50,6 +54,9 @@ export const requestProcessorMachine = createMachine({
         onDone: {
           target: 'interpolating',
           actions: 'assignVariablesAndPaths'
+        },
+        onError: {
+          target: 'failed'
         }
       }
     },
@@ -60,6 +67,9 @@ export const requestProcessorMachine = createMachine({
         onDone: {
           target: 'complete',
           actions: 'assignRequest'
+        },
+        onError: {
+          target: 'failed'
         }
       }
     },
@@ -67,7 +77,10 @@ export const requestProcessorMachine = createMachine({
       type: "final",
       data: (context, event) => context.request
     },
-    failed: {}
+    failed: {
+      type: "final",
+      entry: escalate({ message: 'Failed to process a request' })
+    }
   }
 },
   {

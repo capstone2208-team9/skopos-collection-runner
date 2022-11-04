@@ -1,31 +1,33 @@
-import { interpret } from 'xstate';
-import { waitFor } from 'xstate/lib/waitFor.js';
-import cors from 'cors'
+import express from "express";
+import { interpret } from "xstate";
+import { waitFor } from "xstate/lib/waitFor.js";
+import { collectionRunnerMachine } from "./entities/collectionRunnerMachine.js";
+import cors from "cors";
 
-import { collectionRunnerMachine } from './entities/collectionRunnerMachine.js';
-import express from 'express'
-const app = express()
-app.use(cors())
-const PORT = 3003
+const app = express();
+app.use(cors());
 
-app.get('/:id', async (req, res) => {
-  const collectionId = Number(req.params.id)
+const PORT = 3003;
+
+app.post("/:id", async (req, res) => {
+  const collectionId = Number(req.params.id);
   if (!collectionId) {
-    res.sendStatus(400)
+    res.sendStatus(400);
   } else {
-    const collectionRunnerService = interpret(collectionRunnerMachine)
-      .onTransition(state => console.log(state.value, state.context)) // FOR LOGGING
+    const collectionRunnerService = interpret(
+      collectionRunnerMachine
+    ).onTransition((state) => console.log(state.value, state.context)); // FOR LOGGING
 
-    collectionRunnerService.start()
-    collectionRunnerService.send({ type: 'QUERY', collectionId: collectionId })
-    await waitFor(collectionRunnerService, (state) => state.matches('complete'))
-    collectionRunnerService.stop()
+    collectionRunnerService.start();
+    collectionRunnerService.send({ type: "QUERY", collectionId: collectionId });
+    // await waitFor(collectionRunnerService, (state) => state.matches('complete'))
+    // collectionRunnerService.stop()
 
-    res.header('Access-Control-Allow-Origin', '*');
-    res.sendStatus(200)
+    res.header("Access-Control-Allow-Origin", "*");
+    res.sendStatus(200);
   }
-})
+});
 
 app.listen(PORT, () => {
-  console.log(`Test runner running on port ${PORT}`)
-})
+  console.log(`Collection runner listening on port ${PORT}`);
+});
