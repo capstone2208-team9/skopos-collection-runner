@@ -9,7 +9,7 @@ import { GraphQLClient, gql } from "graphql-request";
 // dotenv.config({ path: __dirname + '/../../.env' });
 // --------------------------------------------------
 
-const endpoint = process.env.GRAPHQL_URL;
+const endpoint = 'http://ec2-54-227-87-194.compute-1.amazonaws.com/graphql';
 const graphQLClient = new GraphQLClient(endpoint);
 
 export const gqlMutateCreateAssertionResults = async (

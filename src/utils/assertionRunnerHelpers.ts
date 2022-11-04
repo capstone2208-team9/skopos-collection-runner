@@ -78,7 +78,7 @@ export const invokeCheckAssertions = async (
   let assertionResults = [];
 
   const assertionVerdict = (response) => {
-    const listOfAssertions = response.Request.assertions;
+    const listOfAssertions = response.request.assertions;
     listOfAssertions.forEach((assertion) => {
       const {
         property,
