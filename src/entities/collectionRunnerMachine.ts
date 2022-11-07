@@ -49,7 +49,7 @@ export const collectionRunnerMachine =
           src: 'queryRequests',
           onDone: [{
             target: 'initializing',
-            cond: { type: 'requestListExists' },
+            // cond: { type: 'requestListExists' },
             actions: 'assignRequestList'
           },
           {
@@ -180,7 +180,7 @@ export const collectionRunnerMachine =
       },
       guards: {
         listNotEmpty,
-        requestListExists
+        // requestListExists
       },
       services: {
         queryRequests: (context, _event) => invokeQueryRequests(context.collectionId),
