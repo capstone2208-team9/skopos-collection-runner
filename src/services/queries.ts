@@ -1,4 +1,6 @@
 import { GraphQLClient, gql } from "graphql-request";
+import dotenv from 'dotenv'
+dotenv.config()
 
 // FOR LOCALHOST DEVELOPMENT ------------------------
 // import * as dotenv from 'dotenv'
@@ -84,8 +86,33 @@ export const gqlQueryResponses = async (collectionRunId): Promise<any[]> => {
   }
 };
 
+export const gqlQuerySNSTopicArn = async (collectionId) => {
+  const query = gql`
+    query Query($where: CollectionWhereUniqueInput!) {
+      collection(where: $where) {
+        monitor {
+          snsTopicArn
+        }
+      }
+    }
+  `
+
+  const queryVariables = {
+    where: {
+      id: Number(collectionId),
+    }
+  };
+
+  try {
+    const databaseResponse = await graphQLClient.request(query, queryVariables);
+    return databaseResponse
+  } catch (error) {
+    console.error(JSON.stringify(error, undefined, 2))
+    return undefined
+  }
+}
+
 export const gqlQueryRequests = async (collectionId) => {
-  console.log(endpoint);
   const query = gql`
     query Requests(
       $where: RequestWhereInput

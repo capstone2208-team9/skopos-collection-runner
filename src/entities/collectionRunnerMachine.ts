@@ -2,8 +2,9 @@ import { createMachine, assign } from 'xstate';
 import { requestRunnerMachine } from './requestRunnerMachine.js'
 import { requestProcessorMachine } from './requestProcessorMachine.js'
 import { assertionRunnerMachine } from './assertionRunnerMachine.js';
-import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty, requestListExists } from '../utils/collectionRunnerHelpers.js';
+import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty, requestListExists, invokeQuerySNSTopicArn } from '../utils/collectionRunnerHelpers.js';
 import { log } from 'xstate/lib/actions.js';
+import { publishMessage } from '../sdkModules/sns/publishMessage.js'
 
 export const collectionRunnerMachine =
   createMachine({
@@ -13,12 +14,14 @@ export const collectionRunnerMachine =
       context: {} as {
         collectionId?: number
         collectionRunId?: number
+        snsTopicArn?: String
         requestList?: object[]
         responses?: object[]
         currentResponse?: object
-      },
-      events: {} as { type: 'QUERY'; collectionId: number }
+      }, 
+      events: {} as { type: 'QUERY'; data: { collectionId: number }}
         | { type: 'done.invoke.query-requests'; data: { requests: object[] } }
+        | { type: 'done.invoke.query-SNSTopicArn'; data: { snsTopicArn: String | undefined } }
         | { type: 'done.invoke.initialize-collection-run'; data: { id: number } }
         | { type: 'done.invoke.process-request'; data: { requests: object[] } }
         | { type: 'done.invoke.run-request'; data: object },
@@ -34,24 +37,43 @@ export const collectionRunnerMachine =
     context: { collectionId: undefined, requestList: undefined, responses: [], currentResponse: undefined },
     id: 'collectionRunner',
     initial: 'idle',
-    states: {
+    states: { 
       idle: {
         on: {
           QUERY: {
-            target: 'querying',
+            target: 'queryingRequests',
             actions: 'assignCollectionId'
           },
         },
       },
-      querying: {
+      queryingRequests: {
         invoke: {
           id: 'query-requests',
           src: 'queryRequests',
           onDone: [{
-            target: 'initializing',
-            // cond: { type: 'requestListExists' },
+            target: 'queryingSNSTopicArn',
+            cond: { type: 'requestListExists' },
             actions: 'assignRequestList'
           },
+          {
+            target: 'failed',
+            actions: log((context, event) => `Request list query unsuccessful.`)
+          }],
+          onError: {
+            target: 'failed'
+          }
+        },
+      },
+      queryingSNSTopicArn: {
+        invoke: {
+          id: 'query-SNSTopicArn',
+          src: 'querySNSTopicArn',
+          onDone: [{
+            target: 'initializing',
+            // cond: { type: 'SNSTopicExists' },
+            actions: 'assignSNSTopicArn'
+          },
+          // change this error handling so it's okay if monitor doesn't have SNS topic
           {
             target: 'failed',
             actions: log((context, event) => `Request list query unsuccessful.`)
@@ -142,22 +164,29 @@ export const collectionRunnerMachine =
         type: 'final',
       },
       failed: {
-        type: 'final',
-        entry: log('Collection run aborted.')
+        invoke: {
+          id: 'publish-alert-message',
+          src: 'publishTopicMessage',
+          onDone: {
+            target: 'complete',
+          },
+        }
       },
     },
   },
     {
       actions: {
-        // action implementation
         'assignCollectionId': assign({
-          collectionId: (_context, event) => event.collectionId,
+          collectionId: (_context, event) => event.data['collectionId'],
         }),
         'assignRequestList': assign({
-          requestList: (_context, event) => event.data.requests
+          requestList: (_context, event) => event.data['requests']
+        }),
+        'assignSNSTopicArn': assign({
+          snsTopicArn: (_context, event) => event.data['snsTopicArn'],
         }),
         'assignCollectionRunId': assign({
-          collectionRunId: (_context, event) => event.data.id
+          collectionRunId: (_context, event) => event.data['id']
         }),
         'assignProcessedRequestToList': assign({
           requestList: (context, event) => {
@@ -180,10 +209,13 @@ export const collectionRunnerMachine =
       },
       guards: {
         listNotEmpty,
-        // requestListExists
+        requestListExists,
+        // SNSTopicExists,
       },
       services: {
         queryRequests: (context, _event) => invokeQueryRequests(context.collectionId),
+        querySNSTopicArn: (context, _event) => invokeQuerySNSTopicArn(context.collectionId),
         createCollectionRun: (context, _event) => invokeCreateCollectionRun(context.collectionId),
+        publishTopicMessage: (context, _event) => publishMessage(context.snsTopicArn, context.collectionId),
       }
     })
