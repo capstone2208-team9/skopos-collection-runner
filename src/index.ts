@@ -20,7 +20,7 @@ app.post("/:id", async (req, res) => {
     ).onTransition((state) => console.log('Entering state:', state.value, state.context)); // FOR LOGGING
 
     collectionRunnerService.start();
-    collectionRunnerService.send({ type: "QUERY", collectionId: collectionId });
+    collectionRunnerService.send({ type: "QUERY", data: {collectionId: collectionId}});
     // await waitFor(collectionRunnerService, (state) => state.matches('complete'))
     // collectionRunnerService.stop()
 
