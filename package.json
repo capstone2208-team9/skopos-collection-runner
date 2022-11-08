@@ -36,10 +36,5 @@
     "prettier": "^2.7.1",
     "prettier-plugin-svelte": "^2.8.0",
     "xstate": "^4.33.6"
-<<<<<<< HEAD
   }
-=======
-  },
-  "type": "module"
->>>>>>> main
 }
