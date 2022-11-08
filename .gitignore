@@ -3,3 +3,4 @@ dist/
 *.typegen.ts
 .DS_Store
 .env
+.tool-versions

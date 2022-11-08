@@ -1,6 +1,6 @@
-import { gqlMutateCreateAssertionResults } from '../services/queries.js'
+import { gqlMutateCreateAssertionResults } from '../services/queries'
 
-function isPassing(
+export function isPassing(
   actual: any,
   operator: string,
   expected: any
