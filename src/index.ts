@@ -1,6 +1,5 @@
 import express from "express";
 import { interpret } from "xstate";
-import { waitFor } from "xstate/lib/waitFor.js";
 import { collectionRunnerMachine } from "./entities/collectionRunnerMachine.js";
 import cors from "cors";
 
@@ -8,6 +7,8 @@ const app = express();
 app.use(cors());
 
 const PORT = 3003;
+
+app.get('/health', (req, res) => res.json({ok: true}))
 
 app.post("/:id", async (req, res) => {
   const collectionId = Number(req.params.id);

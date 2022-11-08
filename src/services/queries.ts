@@ -1,5 +1,6 @@
 import { GraphQLClient, gql } from "graphql-request";
-
+import dotenv from "dotenv";
+dotenv.config()
 // FOR LOCALHOST DEVELOPMENT ------------------------
 // import * as dotenv from 'dotenv'
 // import path from 'path';
