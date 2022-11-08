@@ -1,6 +1,5 @@
 import express from "express";
 import { interpret } from "xstate";
-import { waitFor } from "xstate/lib/waitFor.js";
 import { collectionRunnerMachine } from "./entities/collectionRunnerMachine.js";
 import cors from "cors";
 
@@ -8,6 +7,8 @@ const app = express();
 app.use(cors());
 
 const PORT = 3003;
+
+app.get('/health', (req, res) => res.json({ok: true}))
 
 app.post("/:id", async (req, res) => {
   const collectionId = Number(req.params.id);
@@ -19,7 +20,7 @@ app.post("/:id", async (req, res) => {
     ).onTransition((state) => console.log('Entering state:', state.value, state.context)); // FOR LOGGING
 
     collectionRunnerService.start();
-    collectionRunnerService.send({ type: "QUERY", collectionId: collectionId });
+    collectionRunnerService.send({ type: "QUERY", data: {collectionId: collectionId}});
     // await waitFor(collectionRunnerService, (state) => state.matches('complete'))
     // collectionRunnerService.stop()
 

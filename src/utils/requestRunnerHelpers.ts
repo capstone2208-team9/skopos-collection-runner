@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// import * as fetch from 'node-fetch';
 import { gqlMutateCreateResponse } from '../services/queries.js'
 
 interface Configuration {
