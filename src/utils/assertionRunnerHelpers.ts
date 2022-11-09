@@ -111,9 +111,9 @@ export const interpolateReferences = (
   return listOfAssertions.map(interpolateResponseReference);
 };
 
-export const invokeCheckAssertions = (
+export const invokeCheckAssertions = async (
   response: Response
-): AssertionResult[] => {
+): Promise<any[]> => {
   const listOfAssertions = interpolateReferences(
     response.request.assertions,
     response

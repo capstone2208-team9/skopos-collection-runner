@@ -9,9 +9,35 @@
 //   | { type: 'done.invoke.fetch-api-call'; data: object[] }
 //   | { type: 'done.invoke.save-response'; data: object[] }
 //   | { type: 'done.invoke.check-assertions'; data: object[] }
+export type BasicValue = string | number | undefined;
+
+export type AssertionResult = {
+  responseId: number;
+  pass: boolean;
+  actual: BasicValue;
+  assertionId: number;
+};
+
+export type Assertion = {
+  property: BasicValue;
+  comparison: string;
+  expected: BasicValue;
+  id: number;
+};
+
+export type Response = {
+  request: {
+    assertions: Assertion[];
+  };
+  status: number;
+  latency: number;
+  body: any;
+  headers: Record<string, any>;
+  id: number;
+};
 
 export interface AssertionRunnerContext {
-  response: object | null;
+  response: Response;
   assertionResults: Array<any> | null;
 }
 
@@ -24,7 +50,7 @@ export type AssertionRunnerServices = {
     data: { response: any };
   };
   checkAssertions: {
-    data: any;
+    data: AssertionResult[];
   };
   getResponses: {
     data: any;
