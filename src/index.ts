@@ -1,5 +1,6 @@
 import express from "express";
 import { interpret } from "xstate";
+import {waitFor} from 'xstate/lib/waitFor'
 import { collectionRunnerMachine } from "./entities/collectionRunnerMachine.js";
 import cors from "cors";
 
