@@ -21,8 +21,8 @@ app.post("/:id", async (req, res) => {
 
     collectionRunnerService.start();
     collectionRunnerService.send({ type: "QUERY", data: {collectionId: collectionId}});
-    // await waitFor(collectionRunnerService, (state) => state.matches('complete'))
-    // collectionRunnerService.stop()
+    await waitFor(collectionRunnerService, (state) => state.matches('complete'))
+    collectionRunnerService.stop()
 
     res.header("Access-Control-Allow-Origin", "*");
     res.sendStatus(200);
