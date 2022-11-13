@@ -1,10 +1,10 @@
 import { createMachine, assign } from 'xstate';
-import { requestRunnerMachine } from './requestRunnerMachine.js'
-import { requestProcessorMachine } from './requestProcessorMachine.js'
-import { assertionRunnerMachine } from './assertionRunnerMachine.js';
-import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty, requestListExists, invokeQuerySNSTopicArn } from '../utils/collectionRunnerHelpers.js';
-import { log } from 'xstate/lib/actions.js';
-import { publishMessage } from '../sdkModules/sns/publishMessage.js'
+import { requestRunnerMachine } from './requestRunnerMachine'
+import { requestProcessorMachine } from './requestProcessorMachine'
+import { assertionRunnerMachine } from './assertionRunnerMachine';
+import { invokeQueryRequests, invokeCreateCollectionRun, listNotEmpty, requestListExists, invokeQuerySNSTopicArn } from '../utils/collectionRunnerHelpers';
+import { log } from 'xstate/lib/actions';
+import { publishMessage } from '../sdkModules/sns/publishMessage'
 
 export const collectionRunnerMachine =
   createMachine({
@@ -57,7 +57,7 @@ export const collectionRunnerMachine =
           },
           {
             target: 'failed',
-            actions: log((context, event) => `Request list query unsuccessful.`)
+            actions: log(() => `Request list query unsuccessful.`)
           }],
           onError: {
             target: 'failed'
@@ -76,7 +76,7 @@ export const collectionRunnerMachine =
           // change this error handling so it's okay if monitor doesn't have SNS topic
           {
             target: 'failed',
-            actions: log((context, event) => `Request list query unsuccessful.`)
+            actions: log(() => `Request list query unsuccessful.`)
           }],
           onError: {
             target: 'failed'

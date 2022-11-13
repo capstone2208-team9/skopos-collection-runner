@@ -1,4 +1,4 @@
-import { gqlMutateCreateCollectionRun, gqlQueryRequests, gqlQuerySNSTopicArn } from '../services/queries.js'
+import { gqlMutateCreateCollectionRun, gqlQueryRequests, gqlQuerySNSTopicArn } from '../services/queries'
 
 export const invokeQueryRequests = async (collectionId) => {
   try {
@@ -18,7 +18,8 @@ export const invokeCreateCollectionRun = async (collectionId) => {
 export const invokeQuerySNSTopicArn = async (collectionId) => {
   try {
     let data = await gqlQuerySNSTopicArn(collectionId)
-    data = data.collection.monitor
+    // TODO: this was throwing an error when no monitor so added `|| {}`
+    data = data.collection.monitor || {}
     return data
   } catch (error) {
     console.error(error)
@@ -26,5 +27,5 @@ export const invokeQuerySNSTopicArn = async (collectionId) => {
   }
 }
 
-export const listNotEmpty = (context, event) => context.requestList.length > 1
+export const listNotEmpty = (context) => context.requestList.length > 1
 export const requestListExists = (context, event) => event.data.requests.length !== 0 && event.data.requests !== undefined

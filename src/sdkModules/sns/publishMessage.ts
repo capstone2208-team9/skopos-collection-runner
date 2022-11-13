@@ -1,5 +1,5 @@
 import { PublishCommand } from "@aws-sdk/client-sns";
-import { snsClient } from "./snsClient.js";
+import { snsClient } from "./snsClient";
 
 export const publishMessage = async (snsTopicArn, collectionId) => {
   var params = {

@@ -1,10 +1,10 @@
 import { createMachine, assign } from 'xstate';
-import { escalate } from 'xstate/lib/actions.js';
-import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from '../utils/requestProcessorHelpers.js';
+import { escalate } from 'xstate/lib/actions';
+import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from '../utils/requestProcessorHelpers';
 
 export const requestProcessorMachine = createMachine({
   predictableActionArguments: true,
-  tsTypes: {} as import("./requestProcessorMachine.typegen.js").Typegen0,
+  tsTypes: {} as import("./requestProcessorMachine.typegen").Typegen0,
   schema: {
     context: {} as {
       request?: object
@@ -75,7 +75,7 @@ export const requestProcessorMachine = createMachine({
     },
     complete: {
       type: "final",
-      data: (context, event) => context.request
+      data: (context) => context.request
     },
     failed: {
       type: "final",
@@ -100,8 +100,8 @@ export const requestProcessorMachine = createMachine({
       // no guards here
     },
     services: {
-      parseRequest: (context, event) => invokeParseRequest(context.request),
-      searchForReferencedValues: (context, event) => invokeSearchReferencedValues(context.responses, context.variablesAndPaths),
-      interpolateVariables: (context, event) => invokeInterpolateVariables(context.request, context.variablesAndPaths)
+      parseRequest: (context) => invokeParseRequest(context.request),
+      searchForReferencedValues: (context) => invokeSearchReferencedValues(context.responses, context.variablesAndPaths),
+      interpolateVariables: (context) => invokeInterpolateVariables(context.request, context.variablesAndPaths)
     }
   })

@@ -1,5 +1,4 @@
-// import * as fetch from 'node-fetch';
-import { gqlMutateCreateResponse } from '../services/queries.js'
+import {gqlMutateCreateResponse} from '../services/queries'
 
 interface Configuration {
   method: string;
@@ -23,7 +22,7 @@ export async function invokeFetchAPICall(request, collectionRunId) {
   }
 
   let json = await fetchResponse.json()
-  const responseVariables = {
+  return {
     data: {
       status: fetchResponse.status,
       headers: fetchResponse.headers,
@@ -41,8 +40,6 @@ export async function invokeFetchAPICall(request, collectionRunId) {
       }
     }
   }
-
-  return responseVariables
 }
 
 export async function invokeSaveResponse(responseData) {
