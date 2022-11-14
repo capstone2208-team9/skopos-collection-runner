@@ -1,7 +1,3 @@
-.git
-.gitignore
 node_modules/
-DOCKERFILE
-docker-compose.yml
 dist/
-.env
+.env.*

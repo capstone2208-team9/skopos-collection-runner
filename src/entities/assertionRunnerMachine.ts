@@ -3,10 +3,10 @@ import {
   AssertionRunnerContext,
   AssertionRunnerEvent,
   AssertionRunnerServices,
-} from "../types.js";
-import { invokeCheckAssertions, assertionFailed } from "../utils/assertionRunnerHelpers.js";
-import { invokeSaveAssertionResults } from "../utils/assertionRunnerHelpers.js";
-import { escalate } from "xstate/lib/actions.js";
+} from "../types";
+import { invokeCheckAssertions, assertionFailed } from "../utils/assertionRunnerHelpers";
+import { invokeSaveAssertionResults } from "../utils/assertionRunnerHelpers";
+import { escalate } from "xstate/lib/actions";
 
 //
 export const assertionRunnerMachine =
@@ -87,9 +87,9 @@ export const assertionRunnerMachine =
         assertionFailed
       },
       services: {
-        checkAssertions: (context, event) =>
+        checkAssertions: (context) =>
           invokeCheckAssertions(context.response),
-        saveAssertionResults: (context, event) =>
+        saveAssertionResults: (context) =>
           invokeSaveAssertionResults(context.assertionResults),
       },
     }

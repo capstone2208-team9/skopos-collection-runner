@@ -1,6 +1,6 @@
 import { createMachine, assign } from 'xstate';
-import { escalate, log } from 'xstate/lib/actions.js';
-import { invokeFetchAPICall, invokeSaveResponse } from '../utils/requestRunnerHelpers.js'
+import { escalate, log } from 'xstate/lib/actions';
+import { invokeFetchAPICall, invokeSaveResponse } from '../utils/requestRunnerHelpers'
 
 export const requestRunnerMachine = createMachine({
   predictableActionArguments: true,
@@ -60,7 +60,7 @@ export const requestRunnerMachine = createMachine({
     },
     done: {
       type: 'final',
-      data: (context, event) => context.responseData
+      data: (context) => context.responseData
     },
     failedFetch: {
       type: "final",
@@ -86,7 +86,7 @@ export const requestRunnerMachine = createMachine({
       // no guards here
     },
     services: {
-      fetchAPICall: (context, event) => invokeFetchAPICall(context.request, context.collectionRunId),
-      saveResponse: (context, event) => invokeSaveResponse(context.responseData)
+      fetchAPICall: (context) => invokeFetchAPICall(context.request, context.collectionRunId),
+      saveResponse: (context) => invokeSaveResponse(context.responseData)
     }
   })

@@ -1,6 +1,9 @@
-import { GraphQLClient, gql } from "graphql-request";
 import dotenv from 'dotenv'
-dotenv.config()
+import {gql, GraphQLClient} from 'graphql-request'
+
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config()
+}
 
 // FOR LOCALHOST DEVELOPMENT ------------------------
 // import * as dotenv from 'dotenv'
@@ -39,8 +42,7 @@ export const gqlMutateCreateAssertionResults = async (
   };
 
   try {
-    const databaseResponse = await graphQLClient.request(query, queryVariables);
-    return databaseResponse
+    return await graphQLClient.request(query, queryVariables)
   } catch (error) {
     console.error(JSON.stringify(error, undefined, 2))
     return undefined
@@ -104,8 +106,7 @@ export const gqlQuerySNSTopicArn = async (collectionId) => {
   };
 
   try {
-    const databaseResponse = await graphQLClient.request(query, queryVariables);
-    return databaseResponse
+    return await graphQLClient.request(query, queryVariables)
   } catch (error) {
     console.error(JSON.stringify(error, undefined, 2))
     return undefined
@@ -143,8 +144,7 @@ export const gqlQueryRequests = async (collectionId) => {
   };
 
   try {
-    const databaseResponse = await graphQLClient.request(query, queryVariables);
-    return databaseResponse
+    return await graphQLClient.request(query, queryVariables)
   } catch (error) {
     console.error(JSON.stringify(error, undefined, 2))
     return undefined

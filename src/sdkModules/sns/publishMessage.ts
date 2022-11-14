@@ -1,7 +1,11 @@
 import { PublishCommand } from "@aws-sdk/client-sns";
-import { snsClient } from "./snsClient.js";
+import { snsClient } from "./snsClient";
 
 export const publishMessage = async (snsTopicArn, collectionId) => {
+  // TODO: what to do if no snsTopic has been created? returning null to prevent error
+  if (!snsTopicArn) {
+    return
+  }
   var params = {
     Message: `Error while running collection with id: ${collectionId}`, 
     TopicArn: snsTopicArn, 
