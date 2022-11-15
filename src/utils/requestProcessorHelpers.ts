@@ -1,29 +1,37 @@
 export async function invokeParseRequest(request) {
-  let { url, headers, body } = request
-  let variables = []
+  try {
+    let { url, headers, body } = request
+    headers = headers ? headers : ''
+    body = body ? body : ''
+    let variables = []
+  
+    const regexp = /(@{{[^}]*}})/g
+    let urlMatches = [...url.matchAll(regexp)].map(subarr => subarr[1])
+    let bodyMatches = [...body.matchAll(regexp)].map(subarr => subarr[1])
+    let headerMatches = []
+  
+    for (const property in headers) {
+      headerMatches = [...headers[property].matchAll(regexp)].map(subarr => subarr[1])
+    }
+  
+    variables = [...urlMatches, ...bodyMatches, ...headerMatches]
+  
+    const variablesPathsArray = variables.map(item => [item, undefined])
+  
+    for (let variableSubArr of variablesPathsArray) {
+      let pathVariables = variableSubArr[0]
+        .match(/@\{\{([^}]*)\}\}/)[1]
+        .split(/\.|\[|\]/).filter((path) => path !== "")
+      pathVariables[0] = Number(pathVariables[0].match(/\d+/)[0]) - 1
+  
+      variableSubArr[1] = pathVariables
+    }
 
-  const regexp = /(@{{[^}]*}})/g
-  let urlMatches = [...url.matchAll(regexp)].map(subarr => subarr[1])
-  let bodyMatches = [...body.matchAll(regexp)].map(subarr => subarr[1])
-  let headerMatches = []
-
-  for (const property in headers) {
-    headerMatches = [...headers[property].matchAll(regexp)].map(subarr => subarr[1])
+    return variablesPathsArray
+  } catch(err) {
+    console.log(err)
   }
 
-  variables = [...urlMatches, ...bodyMatches, ...headerMatches]
-
-  const variablesPathsArray = variables.map(item => [item, undefined])
-
-  for (let variableSubArr of variablesPathsArray) {
-    let pathVariables = variableSubArr[0]
-      .match(/@\{\{([^}]*)\}\}/)[1]
-      .split(/\.|\[|\]/).filter((path) => path !== "")
-    pathVariables[0] = Number(pathVariables[0].match(/\d+/)[0]) - 1
-
-    variableSubArr[1] = pathVariables
-  }
-  return variablesPathsArray
 }
 
 export async function invokeSearchReferencedValues(responses, variablesPathsArray) {

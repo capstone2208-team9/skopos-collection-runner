@@ -2,7 +2,6 @@ import { PublishCommand } from "@aws-sdk/client-sns";
 import { snsClient } from "./snsClient";
 
 export const publishMessage = async (snsTopicArn, collectionId) => {
-  // TODO: what to do if no snsTopic has been created? returning null to prevent error
   if (!snsTopicArn) {
     return
   }

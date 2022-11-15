@@ -32,7 +32,7 @@ export type Response = {
   status: number;
   latency: number;
   body: any;
-  headers: Record<string, any>;
+  headers: any;
   id: number;
 };
 

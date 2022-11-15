@@ -3,7 +3,6 @@ import { gqlMutateCreateCollectionRun, gqlQueryRequests, gqlQuerySNSTopicArn } f
 export const invokeQueryRequests = async (collectionId) => {
   try {
     const data = await gqlQueryRequests(collectionId)
-    console.log(data)
     return data
   } catch (error) {
     console.error(error)

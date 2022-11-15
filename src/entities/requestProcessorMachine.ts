@@ -1,5 +1,6 @@
 import { createMachine, assign } from 'xstate';
 import { escalate } from 'xstate/lib/actions';
+import { log } from 'xstate/lib/actions';
 import { invokeParseRequest, invokeSearchReferencedValues, invokeInterpolateVariables } from '../utils/requestProcessorHelpers';
 
 export const requestProcessorMachine = createMachine({
@@ -43,7 +44,8 @@ export const requestProcessorMachine = createMachine({
           actions: 'assignVariablesAndPaths'
         },
         onError: {
-          target: 'failed'
+          target: 'failed',
+          actions: log((context, event) => `failed for parsing`)
         }
       }
     },
@@ -56,7 +58,8 @@ export const requestProcessorMachine = createMachine({
           actions: 'assignVariablesAndPaths'
         },
         onError: {
-          target: 'failed'
+          target: 'failed',
+          actions: log((context, event) => `failed for searching`)
         }
       }
     },
@@ -69,7 +72,8 @@ export const requestProcessorMachine = createMachine({
           actions: 'assignRequest'
         },
         onError: {
-          target: 'failed'
+          target: 'failed',
+          actions: log((context, event) => `failed for interpolation`)
         }
       }
     },

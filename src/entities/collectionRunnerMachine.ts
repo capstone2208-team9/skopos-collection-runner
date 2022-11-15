@@ -112,7 +112,8 @@ export const collectionRunnerMachine =
                 actions: 'assignProcessedRequestToList'
               },
               onError: {
-                target: '#collectionRunner.failed'
+                target: '#collectionRunner.failed',
+                actions: log((context, event) => `Collection Run Error: ${event.data.message}}`)
               }
             },
           },
