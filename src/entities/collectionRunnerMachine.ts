@@ -15,13 +15,14 @@ export const collectionRunnerMachine =
         collectionId?: number
         collectionRunId?: number
         snsTopicArn?: String
+        webhookUrl?: String
         requestList?: object[]
         responses?: object[]
         currentResponse?: object
       }, 
       events: {} as { type: 'QUERY'; data: { collectionId: number }}
         | { type: 'done.invoke.query-requests'; data: { requests: object[] } }
-        | { type: 'done.invoke.query-SNSTopicArn'; data: { snsTopicArn: String | undefined } }
+        | { type: 'done.invoke.query-SNSTopicArn'; data: { snsTopicArn: String | undefined, webhookUrl: String | undefined } }
         | { type: 'done.invoke.initialize-collection-run'; data: { id: number } }
         | { type: 'done.invoke.process-request'; data: { requests: object[] } }
         | { type: 'done.invoke.run-request'; data: object },
@@ -31,7 +32,7 @@ export const collectionRunnerMachine =
         },
         createCollectionRun: {
           data: { id: number }
-        },
+        }
       }
     },
     context: { collectionId: undefined, requestList: undefined, responses: [], currentResponse: undefined },
@@ -71,7 +72,7 @@ export const collectionRunnerMachine =
           onDone: [{
             target: 'initializing',
             // cond: { type: 'SNSTopicExists' },
-            actions: 'assignSNSTopicArn'
+            actions: ['assignSNSTopicArn', 'assignWebhookUrl']
           },
           // change this error handling so it's okay if monitor doesn't have SNS topic
           {
@@ -184,7 +185,10 @@ export const collectionRunnerMachine =
           requestList: (_context, event) => event.data['requests']
         }),
         'assignSNSTopicArn': assign({
-          snsTopicArn: (_context, event) => event.data['snsTopicArn'],
+          snsTopicArn: (_context, event) => event.data['snsTopicArn']
+        }),
+        'assignWebhookUrl': assign({
+          webhookUrl: (_context, event) => event.data['webhookUrl']
         }),
         'assignCollectionRunId': assign({
           collectionRunId: (_context, event) => event.data['id']
@@ -217,6 +221,6 @@ export const collectionRunnerMachine =
         queryRequests: (context, _event) => invokeQueryRequests(context.collectionId),
         querySNSTopicArn: (context, _event) => invokeQuerySNSTopicArn(context.collectionId),
         createCollectionRun: (context, _event) => invokeCreateCollectionRun(context.collectionId),
-        publishTopicMessage: (context, _event) => publishMessage(context.snsTopicArn, context.collectionId),
+        publishTopicMessage: (context, _event) => publishMessage(context.snsTopicArn, context.collectionId, context.webhookUrl),
       }
     })

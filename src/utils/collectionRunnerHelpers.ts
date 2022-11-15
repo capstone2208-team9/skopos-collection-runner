@@ -17,8 +17,8 @@ export const invokeCreateCollectionRun = async (collectionId) => {
 export const invokeQuerySNSTopicArn = async (collectionId) => {
   try {
     let data = await gqlQuerySNSTopicArn(collectionId)
-    // TODO: this was throwing an error when no monitor so added `|| {}`
-    data = data.collection.monitor || {}
+    let webhookUrl = data.collection.monitor.contactInfo.webhookUrl ? data.collection.monitor.contactInfo.webhookUrl : ''
+    data = { snsTopicArn: data.collection.monitor.snsTopicArn, webhookUrl } || {}
     return data
   } catch (error) {
     console.error(error)
