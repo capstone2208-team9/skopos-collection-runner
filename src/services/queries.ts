@@ -94,6 +94,7 @@ export const gqlQuerySNSTopicArn = async (collectionId) => {
       collection(where: $where) {
         monitor {
           snsTopicArn
+          contactInfo
         }
       }
     }

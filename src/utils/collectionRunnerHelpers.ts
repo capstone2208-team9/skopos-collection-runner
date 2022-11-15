@@ -17,7 +17,8 @@ export const invokeCreateCollectionRun = async (collectionId) => {
 export const invokeQuerySNSTopicArn = async (collectionId) => {
   try {
     let data = await gqlQuerySNSTopicArn(collectionId)
-    let webhookUrl = data.collection.monitor.contactInfo.webhookUrl ? data.collection.monitor.contactInfo.webhookUrl : ''
+    console.log(data)
+    let webhookUrl = data.collection.monitor.contactInfo.slack ? data.collection.monitor.contactInfo.slack : ''
     data = { snsTopicArn: data.collection.monitor.snsTopicArn, webhookUrl } || {}
     return data
   } catch (error) {
