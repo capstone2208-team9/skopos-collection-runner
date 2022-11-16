@@ -170,7 +170,7 @@ export const collectionRunnerMachine =
           id: 'publish-alert-message',
           src: 'publishTopicMessage',
           onDone: {
-            target: 'complete',
+            target: '#collectionRunner.complete',
           },
         }
       },
