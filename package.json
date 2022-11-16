@@ -36,6 +36,7 @@
     "graphql-request": "^5.0.0",
     "prettier": "^2.7.1",
     "prettier-plugin-svelte": "^2.8.0",
+    "uuid": "^9.0.0",
     "xstate": "^4.33.6"
   }
 }
