@@ -57,11 +57,11 @@ export const collectionRunnerMachine =
             actions: 'assignRequestList'
           },
           {
-            target: 'failed',
+            target: '#collectionRunner.failed',
             actions: log(() => `Request list query unsuccessful.`)
           }],
           onError: {
-            target: 'failed'
+            target: '#collectionRunner.failed'
           }
         },
       },
@@ -76,7 +76,7 @@ export const collectionRunnerMachine =
           },
           // change this error handling so it's okay if monitor doesn't have SNS topic
           {
-            target: 'failed',
+            target: '#collectionRunner.failed',
             actions: log(() => `Request list query unsuccessful.`)
           }],
           onError: {
@@ -171,6 +171,7 @@ export const collectionRunnerMachine =
           src: 'publishTopicMessage',
           onDone: {
             target: '#collectionRunner.complete',
+            actions: log((context, event) => `Failed State Error: ${event.data}`)
           },
         }
       },

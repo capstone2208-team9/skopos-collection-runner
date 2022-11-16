@@ -7,7 +7,6 @@ interface Configuration {
 }
 
 export async function invokeFetchAPICall(request, collectionRunId) {
-  try {
     let { url, method, headers, body } = request
     headers = headers ? headers : []
     body = body ? body : {}
@@ -43,17 +42,8 @@ export async function invokeFetchAPICall(request, collectionRunId) {
         }
       }
     }
-  } catch(err) {
-    console.log(err)
-  }
-  
 }
 
 export async function invokeSaveResponse(responseData) {
-  try {
-    return await gqlMutateCreateResponse(responseData)
-  } catch(err) {
-    console.log('save request', err)
-  }
-
+  return await gqlMutateCreateResponse(responseData)
 }
