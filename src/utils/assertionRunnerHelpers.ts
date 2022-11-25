@@ -45,6 +45,14 @@ export function isPassing(
       return actual > expected;
     case "is less than":
       return actual < expected;
+    case "includes":
+      if (typeof actual === 'string')
+        return actual.includes(expected as string);
+      return false
+    case "does not include":
+      if (typeof actual === 'string')
+        return !actual.includes(expected as string);
+      return false
     default:
       return false;
   }
@@ -75,13 +83,15 @@ const parseResponse = (identifier: string, response: Response): BasicValue => {
   let path = identifier.split(/\.|\[|\]/).filter((item) => item !== "");
   let currentElement: any = response;
 
-  console.log("path", path);
+  const [el] = path
   for (let step of path) {
-    if (!currentElement[step]) {
-      return undefined;
+    // headers are coming back lowercase in responses so allow case-insensitive comparison
+    if (el === 'headers' && currentElement[step.toLowerCase()]) {
+      currentElement = currentElement[step.toLowerCase()]
+    } else if (currentElement[step]) {
+      currentElement = currentElement[step];
     }
     console.log("current element", currentElement);
-    currentElement = currentElement[step];
   }
 
   return currentElement;
@@ -94,6 +104,7 @@ export const interpolateReferences = (
   const interpolateResponseReference = (assertion: Assertion) => {
     let property = assertion.property;
     let identifier: string = String(property);
+    // TODO: this variable is not used?
     let optionToParse: BasicValue[] = ["body", "headers"];
 
     if (identifier.includes("body") || identifier.includes("headers")) {
@@ -141,9 +152,7 @@ export const invokeSaveAssertionResults = async (
   return await gqlMutateCreateAssertionResults(listOfAssertionResults);
 };
 
-export const assertionFailed = (context, event) => {
-  for (let i = 0, len = context.assertionResults.length; i < len; i += 1) {
-    if (context.assertionResults[i]["pass"] === false) return true;
-  }
-  return false;
+export const assertionFailed = (context) => {
+  // if one of the assertions failed return true
+  return context.assertionResults.some(result => !result.pass)
 };

@@ -6,42 +6,55 @@ interface Configuration {
   body?: string;
 }
 
+const parseResponse = async (response: Response) => {
+  const text = await response.text();
+  try {
+    return JSON.parse(text)
+  } catch (e) {
+    return {}
+  }
+}
+
 export async function invokeFetchAPICall(request, collectionRunId) {
     let { url, method, headers, body } = request
-    headers = headers ? headers : []
+    headers = new Headers(headers || {})
     body = body ? body : {}
     let config: Configuration = { method, headers };
-    if (method.toUpperCase() !== "GET") {
+    if (method.toUpperCase() !== "GET" && body !== '') {
       config = { ...config, body };
     }
-  
+
     const timestampStart = Date.now()
-    let fetchResponse = await fetch(url, config)
-    const timeForRequest = Date.now() - timestampStart
-  
-    if (!fetchResponse.ok) {
-      throw Error(fetchResponse.statusText);
-    }
-  
-    let json = await fetchResponse.json()
-    return {
-      data: {
-        status: fetchResponse.status,
-        headers: fetchResponse.headers,
-        body: json,
-        latency: timeForRequest,
-        collectionRun: {
-          connect: {
-            id: collectionRunId
-          }
-        },
-        request: {
-          connect: {
-            id: Number(request.id)
+
+    try {
+      let fetchResponse = await fetch(url, config)
+      const timeForRequest = Date.now() - timestampStart
+      const body = await parseResponse(fetchResponse)
+      // convert headers into an object we can return
+      const headers = Object.fromEntries(fetchResponse.headers)
+      return {
+        data: {
+          status: fetchResponse.status,
+          headers,
+          body,
+          latency: timeForRequest,
+          collectionRun: {
+            connect: {
+              id: collectionRunId
+            }
+          },
+          request: {
+            connect: {
+              id: Number(request.id)
+            }
           }
         }
       }
+    } catch (e) {
+      console.log(e.toString())
+      throw e
     }
+
 }
 
 export async function invokeSaveResponse(responseData) {

@@ -8,7 +8,7 @@ export const publishMessage = async (snsTopicArn, collectionId, webhookUrl) => {
   }
 
   if (snsTopicArn) {
-    var params = {
+    const params = {
       Message: `Error while running collection with id: ${collectionId}`, 
       TopicArn: snsTopicArn, 
     };
