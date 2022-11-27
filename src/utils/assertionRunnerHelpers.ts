@@ -26,12 +26,21 @@ export type AssertionResult = {
   assertionId: number;
 };
 
+// type guard
+function isString(value: BasicValue): value is string {
+  return typeof value === 'string'
+}
+
+function isNumber(value: BasicValue): value is number {
+  return typeof value === 'number'
+}
+
 export function isPassing(
   actual: BasicValue,
   operator: string,
   expected: BasicValue
 ): boolean {
-  if (typeof actual === "number") {
+  if (isNumber(actual)) {
     expected = Number(expected);
   } else {
     //if not number, the undefined value should be converted to string for comparison
@@ -46,12 +55,14 @@ export function isPassing(
     case "is less than":
       return actual < expected;
     case "includes":
-      if (typeof actual === 'string')
-        return actual.includes(expected as string);
+      if (typeof actual === 'string' && typeof expected === 'string')
+          return actual.includes(expected);
+
       return false
     case "does not include":
-      if (typeof actual === 'string')
-        return !actual.includes(expected as string);
+      if (isString(actual) && isString(expected))
+        return !actual.includes(expected);
+
       return false
     default:
       return false;

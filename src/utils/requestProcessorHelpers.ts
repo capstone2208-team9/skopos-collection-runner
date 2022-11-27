@@ -1,10 +1,3 @@
-// give a string "@{{step1.headers.Content-Type}}" lowercase Content-Type
-export function lowercaseHeaders(value: string) {
-  const parts = value.split(/(.*headers.)([a-zA-Z-]+)(.*)/).filter(Boolean)
-  if (parts.length === 0) return value
-  parts[1] = parts[1].toLowerCase()
-  return parts.join('')
-}
 export async function invokeParseRequest(request) {
   try {
     let { url, headers, body } = request
@@ -13,18 +6,11 @@ export async function invokeParseRequest(request) {
     let variables = []
   
     const regexp = /(@{{[^}]*}})/g
+    const regexpHeaders = /(@{{[^}]*}})/gi
     let urlMatches = [...url.matchAll(regexp)].map(subarr => subarr[1])
     let bodyMatches = [...body.matchAll(regexp)].map(subarr => subarr[1])
-    let headerMatches = []
-  
-    for (const property in headers) {
-      headerMatches = [...headers[property].matchAll(regexp)].map(subarr => {
-        const lowercase = lowercaseHeaders(subarr[1])
-        request.headers[property] = request.headers[property].replace(subarr[1], lowercase)
-        return lowercase
-      })
-    }
-  
+    let headerMatches = [...JSON.stringify(headers).matchAll(regexpHeaders)].map(subarr => subarr[1])
+
     variables = [...urlMatches, ...bodyMatches, ...headerMatches]
   
     const variablesPathsArray = variables.map(item => [item, undefined])
@@ -48,11 +34,13 @@ export async function invokeParseRequest(request) {
 export async function invokeSearchReferencedValues(responses, variablesPathsArray) {
   for (let subarr of variablesPathsArray) {
     let path = subarr[1]
-    const rootItem = responses[path.shift()];
-    let targetItem = rootItem;
+    const isHeaders = path[1] === 'headers'
+    let targetItem = responses[path.shift()];
 
     while (path.length !== 0) {
-      targetItem = targetItem[path.shift()];
+      let value = path.shift()
+      if (isHeaders) value = value.toLowerCase()
+      targetItem = targetItem[value];
 
       if (targetItem === undefined) throw "the path does not exist";
     }
