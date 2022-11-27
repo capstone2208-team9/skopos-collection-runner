@@ -96,11 +96,12 @@ const parseResponse = (identifier: string, response: Response): BasicValue => {
 
   const [el] = path
   for (let step of path) {
+    if (currentElement === undefined) return undefined
     // headers are coming back lowercase in responses so allow case-insensitive comparison
     if (el === 'headers' && currentElement[step.toLowerCase()]) {
       currentElement = currentElement[step.toLowerCase()]
-    } else if (currentElement[step]) {
-      currentElement = currentElement[step];
+    } else {
+      currentElement = currentElement[step]
     }
     console.log("current element", currentElement);
   }
