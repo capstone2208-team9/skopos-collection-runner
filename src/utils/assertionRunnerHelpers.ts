@@ -117,7 +117,7 @@ export const interpolateReferences = (
     // TODO: this variable is not used?
     let optionToParse: BasicValue[] = ["body", "headers"];
 
-    if (['body', 'headers'].includes(identifier)) {
+    if (identifier.includes("body") || identifier.includes("headers")) {
       property = parseResponse(identifier, response);
     } else {
       property = response[property];

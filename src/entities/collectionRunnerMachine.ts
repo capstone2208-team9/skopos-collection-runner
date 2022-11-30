@@ -159,6 +159,7 @@ export const collectionRunnerMachine =
               id: 'run-assertions',
               src: assertionRunnerMachine,
               data: {
+                requestTitle: (context, _event) => context.requestList[0].title,
                 response: (context, _event) => context.currentResponse
               },
               onDone: [{
@@ -171,9 +172,7 @@ export const collectionRunnerMachine =
               }],
               onError: {
                 target: '#collectionRunner.failed',
-                actions: assign({
-                  errorMessage: (context, event) => event.data.message
-                })
+                actions: ['assignErrorMessage', 'logErrorMessage']
                 // actions: log((context, event) => `Collection Run Error: ${event.data.message}}`)
               }
             }
@@ -210,6 +209,13 @@ export const collectionRunnerMachine =
             return firstRequest ? firstRequest['collection'].title : ''
           }
         }),
+        'assignErrorMessage': assign({
+          errorMessage: (_context, event) => {
+            console.log("event.data.message received from child machine", event.data)
+            return event.data['message']
+          }
+        }),
+        'logErrorMessage': log((_context, event) => `Collection Run Error: ${event.data['message']}}`),
         'assignSNSTopicArn': assign({
           snsTopicArn: (_context, event) => event.data['snsTopicArn']
         }),
@@ -247,6 +253,6 @@ export const collectionRunnerMachine =
         queryRequests: (context, _event) => invokeQueryRequests(context.collectionId),
         querySNSTopicArn: (context, _event) => invokeQuerySNSTopicArn(context.collectionId),
         createCollectionRun: (context, _event) => invokeCreateCollectionRun(context.collectionId),
-        publishTopicMessage: (context, _event) => publishMessage(context.snsTopicArn, context.collectionName, context.webhookUrl),
+        publishTopicMessage: (context, _event) => publishMessage(context.snsTopicArn, context.collectionName, context.webhookUrl, context.errorMessage),
       }
     })
