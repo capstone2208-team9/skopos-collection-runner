@@ -1,7 +1,7 @@
 import { PublishCommand } from "@aws-sdk/client-sns";
 import { snsClient } from "./snsClient";
 
-export const publishMessage = async (snsTopicArn, collectionId, webhookUrl) => {
+export const publishMessage = async (snsTopicArn, collectionName, webhookUrl) => {
   // database: monitor: contactInfo: {slack: "webhookUrl"}
   if (!snsTopicArn && !webhookUrl) {
     return
@@ -9,8 +9,8 @@ export const publishMessage = async (snsTopicArn, collectionId, webhookUrl) => {
 
   if (snsTopicArn) {
     const params = {
-      Message: `Error while running collection with id: ${collectionId}`, 
-      TopicArn: snsTopicArn, 
+      Message: `An error occurred while running collection "${collectionName}"`,
+      TopicArn: snsTopicArn,
     };
 
     try {
@@ -23,7 +23,7 @@ export const publishMessage = async (snsTopicArn, collectionId, webhookUrl) => {
   }
 
   if (webhookUrl) {
-    const requestBody = { text: `Error while running collection with id: ${collectionId}`}
+    const requestBody = { text: `An error occurred while running collection "${collectionName}"`}
 
     await fetch(webhookUrl, {
       method: 'POST',

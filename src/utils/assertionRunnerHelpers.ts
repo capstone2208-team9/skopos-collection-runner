@@ -103,9 +103,7 @@ const parseResponse = (identifier: string, response: Response): BasicValue => {
     } else {
       currentElement = currentElement[step]
     }
-    console.log("current element", currentElement);
   }
-
   return currentElement;
 };
 
@@ -119,7 +117,7 @@ export const interpolateReferences = (
     // TODO: this variable is not used?
     let optionToParse: BasicValue[] = ["body", "headers"];
 
-    if (identifier.includes("body") || identifier.includes("headers")) {
+    if (['body', 'headers'].includes(identifier)) {
       property = parseResponse(identifier, response);
     } else {
       property = response[property];
@@ -134,9 +132,7 @@ export const interpolateReferences = (
   return listOfAssertions.map(interpolateResponseReference);
 };
 
-export const invokeCheckAssertions = async (
-  response: Response
-): Promise<any[]> => {
+export const invokeCheckAssertions = async (response: Response): Promise<any[]> => {
   const listOfAssertions = interpolateReferences(
     response.request.assertions,
     response

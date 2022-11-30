@@ -11,6 +11,7 @@ export const requestProcessorMachine = createMachine({
       request?: object
       responses?: object[]
       variablesAndPaths?: any[]
+      errorMessage?: string
     },
     events: {} as { type: 'done.invoke.parse-request'; data: any[] }
       | { type: 'done.invoke.search-references'; data: any[] }
@@ -33,6 +34,7 @@ export const requestProcessorMachine = createMachine({
     request: undefined,
     responses: undefined,
     variablesAndPaths: undefined,
+    errorMessage: undefined,
   },
   states: {
     parsing: {
@@ -45,7 +47,9 @@ export const requestProcessorMachine = createMachine({
         },
         onError: {
           target: 'failed',
-          actions: log((context, event) => `failed for parsing`)
+          actions: assign({
+            errorMessage: (context, event) => event.data
+          })
         }
       }
     },
@@ -59,7 +63,9 @@ export const requestProcessorMachine = createMachine({
         },
         onError: {
           target: 'failed',
-          actions: log((context, event) => `failed for searching`)
+          actions: assign({
+            errorMessage: (context, event) => event.data
+          })
         }
       }
     },
@@ -73,7 +79,9 @@ export const requestProcessorMachine = createMachine({
         },
         onError: {
           target: 'failed',
-          actions: log((context, event) => `failed for interpolation`)
+          actions: assign({
+            errorMessage: (context, event) => event.data
+          })
         }
       }
     },
@@ -83,7 +91,8 @@ export const requestProcessorMachine = createMachine({
     },
     failed: {
       type: "final",
-      entry: escalate({ message: 'Failed to process a request' })
+      // entry: escalate({ message: 'Failed to process a request' })
+      entry: escalate((context, event) => (context as any).errorMessage)
     }
   }
 },

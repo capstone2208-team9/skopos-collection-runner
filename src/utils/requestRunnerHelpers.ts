@@ -51,8 +51,7 @@ export async function invokeFetchAPICall(request, collectionRunId) {
         }
       }
     } catch (e) {
-      console.log(e.toString())
-      throw e
+      throw new Error(`error (${e.message || 'unhandled'}) occurred while fetching request (${request.title})`)
     }
 
 }
