@@ -13,12 +13,14 @@ export const collectionRunnerMachine =
     schema: {
       context: {} as {
         collectionId?: number
+        collectionName?: string
         collectionRunId?: number
         snsTopicArn?: String
         webhookUrl?: String
         requestList?: object[]
         responses?: object[]
         currentResponse?: object
+        errorMessage?: string
       }, 
       events: {} as { type: 'QUERY'; data: { collectionId: number }}
         | { type: 'done.invoke.query-requests'; data: { requests: object[] } }
@@ -35,7 +37,7 @@ export const collectionRunnerMachine =
         }
       }
     },
-    context: { collectionId: undefined, requestList: undefined, responses: [], currentResponse: undefined },
+    context: { collectionId: undefined, requestList: undefined, responses: [], currentResponse: undefined, errorMessage: undefined },
     id: 'collectionRunner',
     initial: 'idle',
     states: { 
@@ -43,7 +45,7 @@ export const collectionRunnerMachine =
         on: {
           QUERY: {
             target: 'queryingRequests',
-            actions: 'assignCollectionId'
+            actions: 'assignCollectionId',
           },
         },
       },
@@ -54,14 +56,17 @@ export const collectionRunnerMachine =
           onDone: [{
             target: 'queryingSNSTopicArn',
             cond: { type: 'requestListExists' },
-            actions: 'assignRequestList'
+            actions: ['assignRequestList', 'assignCollectionName']
           },
           {
             target: '#collectionRunner.failed',
             actions: log(() => `Request list query unsuccessful.`)
           }],
           onError: {
-            target: '#collectionRunner.failed'
+            target: '#collectionRunner.failed',
+            actions: assign({
+              errorMessage: (context, event) => event.data
+            })
           }
         },
       },
@@ -80,7 +85,10 @@ export const collectionRunnerMachine =
             actions: log(() => `Request list query unsuccessful.`)
           }],
           onError: {
-            target: 'failed'
+            target: 'failed',
+            actions: assign({
+              errorMessage: (context, event) => event.data
+            })
           }
         },
       },
@@ -93,7 +101,10 @@ export const collectionRunnerMachine =
             actions: 'assignCollectionRunId'
           },
           onError: {
-            target: 'failed'
+            target: 'failed',
+            actions: assign({
+              errorMessage: (context, event) => event.data
+            })
           }
         }
       },
@@ -114,7 +125,9 @@ export const collectionRunnerMachine =
               },
               onError: {
                 target: '#collectionRunner.failed',
-                actions: log((context, event) => `Collection Run Error: ${event.data.message}}`)
+                actions: assign({
+                  errorMessage: (context, event) => event.data.message
+                })
               }
             },
           },
@@ -135,7 +148,9 @@ export const collectionRunnerMachine =
               },
               onError: {
                 target: '#collectionRunner.failed',
-                actions: log((context, event) => `Collection Run Error: ${event.data.message}`)
+                actions: assign({
+                  errorMessage: (context, event) => event.data.message
+                })
               }
             }
           },
@@ -144,6 +159,7 @@ export const collectionRunnerMachine =
               id: 'run-assertions',
               src: assertionRunnerMachine,
               data: {
+                requestTitle: (context, _event) => context.requestList[0].title,
                 response: (context, _event) => context.currentResponse
               },
               onDone: [{
@@ -156,7 +172,8 @@ export const collectionRunnerMachine =
               }],
               onError: {
                 target: '#collectionRunner.failed',
-                actions: log((context, event) => `Collection Run Error: ${event.data.message}}`)
+                actions: ['assignErrorMessage', 'logErrorMessage']
+                // actions: log((context, event) => `Collection Run Error: ${event.data.message}}`)
               }
             }
           }
@@ -171,7 +188,8 @@ export const collectionRunnerMachine =
           src: 'publishTopicMessage',
           onDone: {
             target: '#collectionRunner.complete',
-            actions: log((context, event) => `Failed State Error: ${event.data}`)
+            // TODOS: not sure how to type this leaving as any for now
+            actions: log((context, event) => `Failed State Error: ${(context as any).errorMessage}`)
           },
         }
       },
@@ -185,6 +203,19 @@ export const collectionRunnerMachine =
         'assignRequestList': assign({
           requestList: (_context, event) => event.data['requests']
         }),
+        'assignCollectionName': assign({
+          collectionName: (_context, event) => {
+            const firstRequest = event.data.requests.at(0)
+            return firstRequest ? firstRequest['collection'].title : ''
+          }
+        }),
+        'assignErrorMessage': assign({
+          errorMessage: (_context, event) => {
+            console.log("event.data.message received from child machine", event.data)
+            return event.data['message']
+          }
+        }),
+        'logErrorMessage': log((_context, event) => `Collection Run Error: ${event.data['message']}}`),
         'assignSNSTopicArn': assign({
           snsTopicArn: (_context, event) => event.data['snsTopicArn']
         }),
@@ -222,6 +253,6 @@ export const collectionRunnerMachine =
         queryRequests: (context, _event) => invokeQueryRequests(context.collectionId),
         querySNSTopicArn: (context, _event) => invokeQuerySNSTopicArn(context.collectionId),
         createCollectionRun: (context, _event) => invokeCreateCollectionRun(context.collectionId),
-        publishTopicMessage: (context, _event) => publishMessage(context.snsTopicArn, context.collectionId, context.webhookUrl),
+        publishTopicMessage: (context, _event) => publishMessage(context.snsTopicArn, context.collectionName, context.webhookUrl, context.errorMessage),
       }
     })

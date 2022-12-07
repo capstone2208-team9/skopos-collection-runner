@@ -26,35 +26,42 @@ export async function invokeParseRequest(request) {
 
     return variablesPathsArray
   } catch(err) {
-    console.log(err)
+    throw new Error(`failed to parse variables from request "${request.title}"`)
   }
 
 }
 
 export async function invokeSearchReferencedValues(responses, variablesPathsArray) {
-  for (let subarr of variablesPathsArray) {
-    let path = subarr[1]
-    const isHeaders = path[1] === 'headers'
-    let targetItem = responses[path.shift()];
+  try {
+    for (let subarr of variablesPathsArray) {
+      let path = subarr[1]
+      const isHeaders = path[1] === 'headers'
+      let targetItem = responses[path.shift()];
 
-    while (path.length !== 0) {
-      let value = path.shift()
-      if (isHeaders) value = value.toLowerCase()
-      targetItem = targetItem[value];
+      while (path.length !== 0) {
+        let value = path.shift()
+        if (isHeaders) value = value.toLowerCase()
+        targetItem = targetItem[value];
+        if (targetItem === undefined) throw new Error(`variable for path "${value}" not found`)
+      }
 
-      if (targetItem === undefined) throw "the path does not exist";
+      subarr[1] = targetItem
     }
-
-    subarr[1] = targetItem
+    return variablesPathsArray
+  } catch (e) {
+    throw new Error(`unhandled exception (${e.message || 'unknown'})`)
   }
-  return variablesPathsArray
 }
 
 export async function invokeInterpolateVariables(request, variablesPathsArray) {
-  let jsonRequest = JSON.stringify(request)
-  for (let [variable, value] of variablesPathsArray) {
-    jsonRequest = jsonRequest.replace(variable, value)
-  }
+  try {
+    let jsonRequest = JSON.stringify(request)
+    for (let [variable, value] of variablesPathsArray) {
+      jsonRequest = jsonRequest.replace(variable, value.replace(/[\r\n]/gm, ' '))
+    }
 
-  return JSON.parse(jsonRequest)
+    return JSON.parse(jsonRequest)
+  } catch(err) {
+    throw new Error(`collection runner failed interpolating variables for ${request.title}`)
+  }
 }

@@ -37,6 +37,7 @@ export type Response = {
 };
 
 export interface AssertionRunnerContext {
+  requestTitle: string;
   response: Response;
   assertionResults: Array<any> | null;
 }

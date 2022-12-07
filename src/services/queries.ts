@@ -14,19 +14,19 @@ if (process.env.NODE_ENV !== 'production') {
 // dotenv.config({ path: __dirname + '/../../.env' });
 // --------------------------------------------------
 
-const endpoint = process.env.GRAPHQL_URL;
-const graphQLClient = new GraphQLClient(endpoint);
+const endpoint = process.env.GRAPHQL_URL
+const graphQLClient = new GraphQLClient(endpoint)
 
 export const gqlMutateCreateAssertionResults = async (
   listOfAssertionResults
 ) => {
   let query = gql`
-    mutation Mutation($data: [AssertionResultCreateManyInput!]!) {
-      createManyAssertionResult(data: $data) {
-        count
+      mutation Mutation($data: [AssertionResultCreateManyInput!]!) {
+          createManyAssertionResult(data: $data) {
+              count
+          }
       }
-    }
-  `;
+  `
 
   const formattedResults = listOfAssertionResults.map((assertionResult) => {
     return {
@@ -34,12 +34,12 @@ export const gqlMutateCreateAssertionResults = async (
       pass: assertionResult.pass,
       assertionId: assertionResult.assertionId,
       actual: String(assertionResult.actual),
-    };
-  });
+    }
+  })
 
   const queryVariables = {
     data: formattedResults,
-  };
+  }
 
   try {
     return await graphQLClient.request(query, queryVariables)
@@ -47,28 +47,28 @@ export const gqlMutateCreateAssertionResults = async (
     console.error(JSON.stringify(error, undefined, 2))
     return undefined
   }
-};
+}
 
 export const gqlQueryResponses = async (collectionRunId): Promise<any[]> => {
   const query = gql`
-    query Query($where: ResponseWhereInput) {
-      responses(where: $where) {
-        id
-        status
-        headers
-        body
-        latency
-        request {
-          assertions {
-            property
-            comparison
-            expected
-            id
+      query Query($where: ResponseWhereInput) {
+          responses(where: $where) {
+              id
+              status
+              headers
+              body
+              latency
+              request {
+                  assertions {
+                      property
+                      comparison
+                      expected
+                      id
+                  }
+              }
           }
-        }
       }
-    }
-  `;
+  `
 
   const queryVariables = {
     where: {
@@ -76,35 +76,35 @@ export const gqlQueryResponses = async (collectionRunId): Promise<any[]> => {
         equals: Number(collectionRunId),
       },
     },
-  };
+  }
 
 
   try {
-    const databaseResponse = await graphQLClient.request(query, queryVariables);
+    const databaseResponse = await graphQLClient.request(query, queryVariables)
     return databaseResponse.responses
   } catch (error) {
     console.error(JSON.stringify(error, undefined, 2))
     return undefined
   }
-};
+}
 
 export const gqlQuerySNSTopicArn = async (collectionId) => {
   const query = gql`
-    query Query($where: CollectionWhereUniqueInput!) {
-      collection(where: $where) {
-        monitor {
-          snsTopicArn
-          contactInfo
-        }
+      query Query($where: CollectionWhereUniqueInput!) {
+          collection(where: $where) {
+              monitor {
+                  snsTopicArn
+                  contactInfo
+              }
+          }
       }
-    }
   `
 
   const queryVariables = {
     where: {
       id: Number(collectionId),
     }
-  };
+  }
 
   try {
     return await graphQLClient.request(query, queryVariables)
@@ -116,22 +116,25 @@ export const gqlQuerySNSTopicArn = async (collectionId) => {
 
 export const gqlQueryRequests = async (collectionId) => {
   const query = gql`
-    query Requests(
-      $where: RequestWhereInput
-      $orderBy: [RequestOrderByWithRelationInput!]
-    ) {
-      requests(where: $where, orderBy: $orderBy) {
-        id
-        collectionId
-        stepNumber
-        title
-        method
-        url
-        headers
-        body
+      query Requests(
+          $where: RequestWhereInput
+          $orderBy: [RequestOrderByWithRelationInput!]
+      ) {
+          requests(where: $where, orderBy: $orderBy) {
+              id
+              collectionId
+              collection {
+                  title
+              }
+              stepNumber
+              title
+              method
+              url
+              headers
+              body
+          }
       }
-    }
-  `;
+  `
 
   const queryVariables = {
     where: {
@@ -140,9 +143,9 @@ export const gqlQueryRequests = async (collectionId) => {
       },
     },
     orderBy: {
-      stepNumber: "asc",
+      stepNumber: 'asc',
     },
-  };
+  }
 
   try {
     return await graphQLClient.request(query, queryVariables)
@@ -150,16 +153,16 @@ export const gqlQueryRequests = async (collectionId) => {
     console.error(JSON.stringify(error, undefined, 2))
     return undefined
   }
-};
+}
 
 export const gqlMutateCreateCollectionRun = async (collectionId) => {
   const mutation = gql`
-    mutation CreateOneCollectionRun($data: CollectionRunCreateInput!) {
-      createOneCollectionRun(data: $data) {
-        id
+      mutation CreateOneCollectionRun($data: CollectionRunCreateInput!) {
+          createOneCollectionRun(data: $data) {
+              id
+          }
       }
-    }
-  `;
+  `
 
   const mutationVariables = {
     data: {
@@ -169,43 +172,43 @@ export const gqlMutateCreateCollectionRun = async (collectionId) => {
         },
       },
     },
-  };
+  }
 
   try {
-    const databaseResponse = await graphQLClient.request(mutation, mutationVariables);
-    return databaseResponse.createOneCollectionRun;
+    const databaseResponse = await graphQLClient.request(mutation, mutationVariables)
+    return databaseResponse.createOneCollectionRun
   } catch (error) {
     console.error(JSON.stringify(error, undefined, 2))
     return undefined
   }
-};
+}
 
 export const gqlMutateCreateResponse = async (responseData) => {
   const responseMutation = gql`
-    mutation CreateOneResponse($data: ResponseCreateInput!) {
-      createOneResponse(data: $data) {
-        id
-        status
-        headers
-        body
-        latency
-        request {
-          assertions {
-            property
-            comparison
-            expected
-            id
+      mutation CreateOneResponse($data: ResponseCreateInput!) {
+          createOneResponse(data: $data) {
+              id
+              status
+              headers
+              body
+              latency
+              request {
+                  assertions {
+                      property
+                      comparison
+                      expected
+                      id
+                  }
+              }
           }
-        }
       }
-    }
-  `;
+  `
 
   try {
-    const databaseResponse = await graphQLClient.request(responseMutation, responseData);
-    return databaseResponse.createOneResponse;
+    const databaseResponse = await graphQLClient.request(responseMutation, responseData)
+    return databaseResponse.createOneResponse
   } catch (error) {
     console.error(JSON.stringify(error, undefined, 2))
     return undefined
   }
-};
+}

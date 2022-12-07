@@ -7,6 +7,13 @@ test('invokeParseRequest extracts variables from url', async () => {
   expect(actual).toEqual([["@{{step1.body.url}}", [0, "body", "url"]]])
 })
 
+test('invokeParseRequest extracts variables with bracket notation', async () => {
+  const request = {url: "https://jsonplaceholder.typicode.com/posts/1", headers: {"Content-Type": '@{{step1.body[0].title}}'}}
+  const actual = await invokeParseRequest(request)
+  expect(actual).toHaveLength(1)
+  expect(actual).toEqual([["@{{step1.body[0].title}}", [0, "body", "0", "title"]]])
+})
+
 test('invokeParseRequest extracts variables from headers', async () => {
   const request = {url: "https://jsonplaceholder.typicode.com/posts/1", headers: {"Content-Type": '@{{step1.headers.Content-Type}}'}}
   const actual = await invokeParseRequest(request)

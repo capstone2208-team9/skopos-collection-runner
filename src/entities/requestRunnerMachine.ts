@@ -10,6 +10,7 @@ export const requestRunnerMachine = createMachine({
       request?: object
       collectionRunId?: number
       responseData?: object
+      errorMessage?: string
     },
     events: {} as
       | { type: 'done.invoke.fetch-api-call'; data: object }
@@ -27,7 +28,8 @@ export const requestRunnerMachine = createMachine({
   context: {
     request: undefined,
     responseData: undefined,
-    collectionRunId: undefined
+    collectionRunId: undefined,
+    errorMessage: undefined,
   },
   states: {
     fetching: {
@@ -40,7 +42,10 @@ export const requestRunnerMachine = createMachine({
         },
         onError: {
           target: 'failedFetch',
-          actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
+          actions: assign({
+            errorMessage: (context, event) => event.data
+          })
+          // actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
         }
       }
     },
@@ -54,7 +59,10 @@ export const requestRunnerMachine = createMachine({
         },
         onError: {
           target: 'failedSave',
-          actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
+          actions: assign({
+            errorMessage: (context, event) => event.data
+          })
+          // actions: log((context, event) => `Error: ${JSON.stringify(event.data, undefined, 2)}`)
         }
       }
     },
@@ -64,11 +72,13 @@ export const requestRunnerMachine = createMachine({
     },
     failedFetch: {
       type: "final",
-      entry: escalate({ message: 'An error occurred fetching response for an API call' })
+      // entry: escalate({ message: 'An error occurred fetching response for an API call' })
+      entry: escalate((context, event) => context['errorMessage'])
     },
     failedSave: {
       type: "final",
-      entry: escalate({ message: 'An error occurred saving a response to the database' })
+      // entry: escalate({ message: 'An error occurred saving a response to the database' })
+      entry: escalate((context, event) => context['errorMessage'])
     }
   }
 },

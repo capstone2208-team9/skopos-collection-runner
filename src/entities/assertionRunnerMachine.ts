@@ -14,6 +14,7 @@ export const assertionRunnerMachine =
   createMachine(
     {
       context: {
+        requestTitle: null,
         response: null,
         assertionResults: null,
       },
@@ -65,7 +66,7 @@ export const assertionRunnerMachine =
         },
         failedCheck: {
           type: "final",
-          entry: escalate({ message: 'An assertion failed' })
+          entry: 'escalateErrorMessage'
         },
         failedSave: {
           type: "final",
@@ -82,6 +83,13 @@ export const assertionRunnerMachine =
         assignAssertionResults: assign({
           assertionResults: (context, event) => event["data"],
         }),
+        escalateErrorMessage: escalate((context, _event) => {
+          const failedAssertionId = context.assertionResults.find((result) => result.pass === false).assertionId
+          const failedAssertion = context['response'].request.assertions.find((assertion) => assertion.id === failedAssertionId)
+          const requestTitle = context['requestTitle']
+          console.log("failed assertion", failedAssertion)
+          return { message: `Following assertion has failed for request titled "${requestTitle}": ${JSON.stringify(failedAssertion, null, 2)}`}
+        })
       },
       guards: {
         assertionFailed
