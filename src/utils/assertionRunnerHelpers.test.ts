@@ -3,7 +3,6 @@ import {
   interpolateReferences,
   Response,
   Assertion,
-  AssertionResult,
   invokeCheckAssertions,
 } from "./assertionRunnerHelpers";
 
@@ -169,7 +168,8 @@ describe("interpolate values from responses", () => {
 
 describe("assertion results are correct for a response", () => {
   const { response, assertionResults } = mockValues();
-  it("should interpolate response", function () {
-    expect(invokeCheckAssertions(response)).toEqual(assertionResults);
+  it("should interpolate response", async function () {
+    const actual = await invokeCheckAssertions(response)
+    expect(actual).toEqual(assertionResults);
   });
 });
