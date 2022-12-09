@@ -7,7 +7,7 @@ export const publishMessage = async (
   webhookUrl,
   errorMessage
 ) => {
-  // database: monitor: contactInfo: {slack: "webhookUrl"}
+  console.log("publish message function", webhookUrl)
   if (!snsTopicArn && !webhookUrl) {
     return;
   }
@@ -21,20 +21,26 @@ export const publishMessage = async (
     try {
       const data = await snsClient.send(new PublishCommand(params));
       console.log("Success.", data);
-      return data;
     } catch (err) {
       console.log("Error", err.stack);
     }
   }
 
   if (webhookUrl) {
+    console.log("in webhook if block")
+
     const requestBody = {
       text: `An error occurred while running collection "${collectionName}" with error message: ${errorMessage}`,
     };
 
-    await fetch(webhookUrl, {
-      method: "POST",
-      body: JSON.stringify(requestBody),
-    });
+    try {
+      await fetch(webhookUrl, {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+      });
+      console.log("success with webhook")
+    } catch (err) {
+      console.log(`error with webhook: ${err}`)
+    }
   }
 };
