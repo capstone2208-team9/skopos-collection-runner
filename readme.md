@@ -1,11 +1,16 @@
 # Collection Runner for Skopos
-![State Machine in Collection Runner](./illustrations/xstate-collection-runner.png)
+The collection runner is a component of Skopos that is responsible for executing multi-step tests. It uses Xstate as a state machine to orchestrate multi-step testing. The collection runner:
+- Fetches data necessary for running the tests from a graphql server.
+- Executes the tests using a state machine (Xstate).
+- If any error occurs, it sends a notification using SNS (Simple Notification Service).
+- Finally, it sends the tests data to the graphql server.
 
-The collection runner is a component of Skopos that is responsible for executing multi-step tests. It uses Xstate as a state machine to orchestrate multi-step testing. It performs four main things:
-1. Fetches data necessary for running the tests from a graphql server.
-2. Executes the tests using a state machine (Xstate).
-3. If any error occurs, it sends a notification using SNS (Simple Notification Service).
-4. Finally, it sends the tests data to the graphql server.
+<hr>
+
+![State Machine in Collection Runner](./illustrations/xstate-collection-runner.png)
+|:--:|
+|<b>Diagram illustrating how the collection runner executes a collection of tests.</b>|
+(1) Receives a POST request with ‘collectionId' as a parameter. (2) Invokes the main collection runner state machine. (3-5) To execute each test, the main state machine invokes a sequence of child state machines.|
 
 # Requirement
 
